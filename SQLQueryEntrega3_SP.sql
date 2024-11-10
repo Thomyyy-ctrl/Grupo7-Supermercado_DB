@@ -21,7 +21,7 @@ begin
 				values (@legajo, @nombre, @apellido ,  @nroDoc ,@calleYNum , @localidad , @provincia ,  @cuil, @cargo ,@sucursal ,@turno ,@emailPersonal, @emailEmpresa)
 		commit transaction 
 	end try
-	BEGIN CATCH -- si el procedimiento falla, el error será capturado y lanzado nuevamente con RAISERROR, lo que permite que el error se maneje fuera del procedimiento si es necesario
+	BEGIN CATCH -- si el procedimiento falla, el error serÃ¡ capturado y lanzado nuevamente con RAISERROR, lo que permite que el error se maneje fuera del procedimiento si es necesario
         ROLLBACK TRANSACTION;
         DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
         
@@ -68,7 +68,7 @@ BEGIN
             -- Verificar si el empleado existe
             IF EXISTS (SELECT 1 FROM esquema_Persona.empleado WHERE legajo = @legajo AND id = @id)
             BEGIN
-                -- Realizar la actualización
+                -- Realizar la actualizaciÃ³n
                 UPDATE esquema_Persona.empleado
                 SET
                     nombre = COALESCE(@nombre, nombre),
@@ -342,7 +342,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Verificación de que el ID no sea NULL
+        -- VerificaciÃ³n de que el ID no sea NULL
         IF @id IS NULL
         BEGIN
             RAISERROR ('Se debe enviar el id DE Medios de pago', 16, 1);
@@ -354,7 +354,7 @@ BEGIN
         -- Verificar si el medio de pago existe
         IF EXISTS (SELECT 1 FROM esquema_operaciones.mediosDePago WHERE id = @id)
         BEGIN
-            -- Actualizar los datos del medio de pago usando COALESCE para conservar valores existentes si el parámetro es NULL
+            -- Actualizar los datos del medio de pago usando COALESCE para conservar valores existentes si el parÃ¡metro es NULL
             UPDATE esquema_operaciones.mediosDePago
             SET
                 MedioDePago = COALESCE(@MedioDePago, MedioDePago),
@@ -446,7 +446,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Verificación de que el ID y ID de Producto no sean NULL
+        -- VerificaciÃ³n de que el ID y ID de Producto no sean NULL
         IF @id IS NULL OR @idProducto IS NULL 
         BEGIN
             RAISERROR ('Se debe enviar el ID y el ID del producto importado', 16, 1);
@@ -455,14 +455,14 @@ BEGIN
 
         SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
 
-        -- Verificación de existencia de idProducto en la tabla Producto
+        -- VerificaciÃ³n de existencia de idProducto en la tabla Producto
         IF NOT EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE id = @idProducto)
         BEGIN
             RAISERROR ('El ID de producto proporcionado no existe en la tabla Producto', 16, 1);
             RETURN;
         END
 
-        -- Insertar la línea de producto
+        -- Insertar la lÃ­nea de producto
         INSERT INTO esquema_Producto.LineaDeProducto (id, idProducto, lineaProducto, productoDescrip)
         VALUES (@id, @idProducto, @lineaDeProducto, @productoDescrip);
 
@@ -480,7 +480,7 @@ BEGIN
             @ErrorState = ERROR_STATE();
 
         -- Lanzar el error con RAISERROR
-        RAISERROR ('No se pudo insertar la clasificación. Detalles: %s', 
+        RAISERROR ('No se pudo insertar la clasificaciÃ³n. Detalles: %s', 
                     @ErrorSeverity, @ErrorState, @ErrorMessage);
     END CATCH
 END;
@@ -495,19 +495,19 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Verificación de que el ID no sea NULL
+        -- VerificaciÃ³n de que el ID no sea NULL
         IF @id IS NULL
         BEGIN
-            RAISERROR('Se debe enviar el ID de la línea de producto', 16, 1);
+            RAISERROR('Se debe enviar el ID de la lÃ­nea de producto', 16, 1);
             RETURN;
         END
 
         SET NOCOUNT ON; -- No mostrar la cantidad de filas afectadas en consola
 
-        -- Verificación de existencia de la línea de producto
+        -- VerificaciÃ³n de existencia de la lÃ­nea de producto
         IF EXISTS (SELECT 1 FROM esquema_Producto.LineaDeProducto WHERE id = @id)
         BEGIN
-            -- Actualizar la línea de producto con los valores proporcionados o mantener los actuales si son NULL
+            -- Actualizar la lÃ­nea de producto con los valores proporcionados o mantener los actuales si son NULL
             UPDATE esquema_Producto.LineaDeProducto
             SET
                 lineaProducto = COALESCE(@lineaProducto, lineaProducto),
@@ -516,9 +516,9 @@ BEGIN
         END
         ELSE
         BEGIN
-            -- Lanzar un error con RAISERROR si no existe la línea de producto con el @id proporcionado
-            RAISERROR('No existe la línea de producto con ID %d', 16, 1, @id);
-            RETURN; -- Evita continuar si no existe la línea de producto
+            -- Lanzar un error con RAISERROR si no existe la lÃ­nea de producto con el @id proporcionado
+            RAISERROR('No existe la lÃ­nea de producto con ID %d', 16, 1, @id);
+            RETURN; -- Evita continuar si no existe la lÃ­nea de producto
         END
 
         COMMIT TRANSACTION;
@@ -547,32 +547,32 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Verificación de que el @id no sea NULL
+        -- VerificaciÃ³n de que el @id no sea NULL
         IF @id IS NULL
         BEGIN
-            RAISERROR('Se debe enviar el id de la línea de producto', 16, 1);
+            RAISERROR('Se debe enviar el id de la lÃ­nea de producto', 16, 1);
             RETURN;
         END
 
         SET NOCOUNT ON; -- No mostrar la cantidad de filas afectadas en consola
 
-        -- Verificación de existencia del id en la tabla
+        -- VerificaciÃ³n de existencia del id en la tabla
         IF EXISTS (SELECT 1 FROM esquema_Producto.LineaDeProducto WHERE id = @id)
         BEGIN
-            -- Eliminar la línea de producto
+            -- Eliminar la lÃ­nea de producto
             DELETE FROM esquema_Producto.LineaDeProducto WHERE id = @id;
         END
         ELSE
         BEGIN
             -- Lanzar un error si no se encuentra el id
-            RAISERROR('No existe el id de línea de producto %d', 16, 1, @id);
-            RETURN; -- Evitar que se continúe la ejecución si no se encuentra el id
+            RAISERROR('No existe el id de lÃ­nea de producto %d', 16, 1, @id);
+            RETURN; -- Evitar que se continÃºe la ejecuciÃ³n si no se encuentra el id
         END
 
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        -- Si ocurre un error, revertir la transacción
+        -- Si ocurre un error, revertir la transacciÃ³n
         ROLLBACK TRANSACTION;
 
         DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
@@ -584,7 +584,7 @@ BEGIN
             @ErrorState = ERROR_STATE();
 
         -- Lanzar el error con RAISERROR
-        RAISERROR('No se pudo eliminar la línea de producto. Detalles: %s', 
+        RAISERROR('No se pudo eliminar la lÃ­nea de producto. Detalles: %s', 
                     @ErrorSeverity, @ErrorState, @ErrorMessage);
     END CATCH
 END;
@@ -609,7 +609,7 @@ BEGIN
 
         SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
 
-        -- Inserción de la sucursal en la tabla
+        -- InserciÃ³n de la sucursal en la tabla
         INSERT INTO esquema_Sucursal.sucursales (
             ciudad,
             reemplazadaX,
@@ -632,7 +632,7 @@ BEGIN
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        -- Revertir la transacción en caso de error
+        -- Revertir la transacciÃ³n en caso de error
         ROLLBACK TRANSACTION;
 
         DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
@@ -747,7 +747,7 @@ BEGIN
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        -- En caso de error, hacer rollback de la transacción
+        -- En caso de error, hacer rollback de la transacciÃ³n
         ROLLBACK TRANSACTION;
 
         DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
@@ -795,14 +795,14 @@ BEGIN
         -- Verificar si ya existe un producto con el idCatalogo
         IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idCatalogo = @idCatalogo)
         BEGIN
-            RAISERROR('Ya existe un producto con el idCatalogo %d. El id debe ser único.', 16, 1, @idCatalogo);
+            RAISERROR('Ya existe un producto con el idCatalogo %d. El id debe ser Ãºnico.', 16, 1, @idCatalogo);
             RETURN;
         END
 
         -- Verificar si ya existe un producto con el idImportado
         IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idImportado = @idImportado)
         BEGIN
-            RAISERROR('Ya existe un producto con el idImportado %d. El id debe ser único.', 16, 1, @idImportado);
+            RAISERROR('Ya existe un producto con el idImportado %d. El id debe ser Ãºnico.', 16, 1, @idImportado);
             RETURN;
         END
 
@@ -888,17 +888,17 @@ BEGIN
         -- Verificar si ya existe un producto con el idCatalogo
         IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idCatalogo = @idCatalogo)
         BEGIN
-            RAISERROR('Ya existe un producto con el idCatalogo %d. El id debe ser único.', 16, 1, @idCatalogo);
+            RAISERROR('Ya existe un producto con el idCatalogo %d. El id debe ser Ãºnico.', 16, 1, @idCatalogo);
             RETURN;
         END
 
         -- Verificar si ya existe un producto con el idImportado
         IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idImportado = @idImportado)
         BEGIN
-            RAISERROR('Ya existe un producto con el idImportado %d. El id debe ser único.', 16, 1, @idImportado);
+            RAISERROR('Ya existe un producto con el idImportado %d. El id debe ser Ãºnico.', 16, 1, @idImportado);
             RETURN;
         END
-        -- Modificar el producto con valores nulos utilizando COALESCE para mantener el valor actual si el parámetro es nulo
+        -- Modificar el producto con valores nulos utilizando COALESCE para mantener el valor actual si el parÃ¡metro es nulo
         UPDATE esquema_Producto.Producto
         SET
 		    idCatalogo = COALESCE(@idCatalogo,idCatalogo), 
@@ -965,7 +965,7 @@ BEGIN
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        -- En caso de error, hacer rollback de la transacción
+        -- En caso de error, hacer rollback de la transacciÃ³n
         ROLLBACK TRANSACTION;
 
         DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
@@ -1035,9 +1035,9 @@ GO
 
 -- Procedimiento para insertar los detalles de la venta
 CREATE OR ALTER PROCEDURE esquema_operaciones.insertarDetalleDeVenta(
-    @VentaID INT,  -- ID de la venta a la que se asociarán los detalles
-    @Codigo INT,  -- Código del producto
-    @Descripcion VARCHAR(30),  -- Descripción del producto
+    @VentaID INT,  -- ID de la venta a la que se asociarÃ¡n los detalles
+    @Codigo INT,  -- CÃ³digo del producto
+    @Descripcion VARCHAR(30),  -- DescripciÃ³n del producto
     @PrecioUnitario DECIMAL(4,2),  -- Precio unitario
     @Cantidad INT,  -- Cantidad del producto
     @Subtotal DECIMAL(5,2),-- Subtotal de la venta
@@ -1047,7 +1047,7 @@ BEGIN
 BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Verificación de que el ID de venta y ID de Producto no sean NULL
+        -- VerificaciÃ³n de que el ID de venta y ID de Producto no sean NULL
         IF @VentaID IS NULL OR @idProducto IS NULL 
         BEGIN
             RAISERROR ('Se debe enviar EL id de venta y el id del producto', 16, 1);
@@ -1056,7 +1056,7 @@ BEGIN TRY
 
         SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
 
-        -- Verificación de existencia de idProducto en la tabla Producto
+        -- VerificaciÃ³n de existencia de idProducto en la tabla Producto
         IF NOT EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE id = @idProducto)
         BEGIN
             RAISERROR ('El ID de producto proporcionado no existe en la tabla Producto', 16, 1);
@@ -1064,7 +1064,7 @@ BEGIN TRY
         END
       
         -- Insertar los detalles de la venta
-        INSERT INTO esquema_operaciones.DetalleDeVenta (Código, Descripción, PrecioUnitario, Cantidad, Subtotal)
+        INSERT INTO esquema_operaciones.DetalleDeVenta (CÃ³digo, DescripciÃ³n, PrecioUnitario, Cantidad, Subtotal)
         VALUES (@Codigo, @Descripcion, @PrecioUnitario, @Cantidad, @Subtotal)
 		
 
@@ -1089,9 +1089,9 @@ GO
 -- Procedimiento para insertar la Factura
 CREATE OR ALTER PROCEDURE esquema_operaciones.insertarFactura( 
     @VentaID INT,  -- ID de la venta para asociarla con la factura
-    @NroFactura INT,  -- Número de factura
-    @FechaEmision DATE,  -- Fecha de emisión de la factura
-    @HoraEmision TIME,  -- Hora de emisión de la factura
+    @NroFactura INT,  -- NÃºmero de factura
+    @FechaEmision DATE,  -- Fecha de emisiÃ³n de la factura
+    @HoraEmision TIME,  -- Hora de emisiÃ³n de la factura
     @IdEmpleado INT,  -- ID del empleado que realiza la factura
     @Total DECIMAL(38,2),  -- Total de la factura
     @TipoDeFactura VARCHAR(1),  -- Tipo de factura ('A', 'B', 'C')
@@ -1107,7 +1107,7 @@ BEGIN
 		
         SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
 
-        -- Verificación de existencia de idProducto en la tabla Producto
+        -- VerificaciÃ³n de existencia de idProducto en la tabla Producto
         IF NOT EXISTS (SELECT 1 FROM esquema_operaciones.MediosDePago where id = @idMedioDepago)
         BEGIN
             RAISERROR ('El ID del medio de pago no existe', 16, 1);
@@ -1141,7 +1141,7 @@ BEGIN
             @ErrorSeverity = ERROR_SEVERITY(),
             @ErrorState = ERROR_STATE();
         
-        RAISERROR('Error al insertar el detalle de venta. Detalles: %s', @ErrorSeverity, @ErrorState, @ErrorMessage);
+        RAISERROR('Error al insertar la factura. Detalles: %s', @ErrorSeverity, @ErrorState, @ErrorMessage);
     END CATCH
 END;
 GO
@@ -1216,7 +1216,7 @@ BEGIN
             @ErrorSeverity = ERROR_SEVERITY(),
             @ErrorState = ERROR_STATE();
         
-        RAISERROR('Error al insertar el detalle de venta. Detalles: %s', @ErrorSeverity, @ErrorState, @ErrorMessage);
+        RAISERROR('Error al eliminar venta. Detalles: %s', @ErrorSeverity, @ErrorState, @ErrorMessage);
     END CATCH
 END;
 GO

@@ -39,7 +39,7 @@ BEGIN
            
             -- Crear tabla temporal para importar los datos del Excel
             CREATE TABLE #MediosDePagoTemporal1 (
-                Mediodepago VARCHAR(20),
+                Mediodepago VARCHAR(50),
                 Nombre VARCHAR(50)
             );
 
@@ -70,7 +70,7 @@ BEGIN
             SELECT * FROM #MediosDePagoTemporal1;
 
             -- Insertar los datos finales en la tabla destino
-            INSERT INTO esquema_operaciones.mediosDePago (medioDePago, NombreES)
+            INSERT INTO esquema_operaciones.MediosDePago(MedioDePago, NombreEs)
             SELECT Mediodepago, Nombre
             FROM #MediosDePagoTemporal1;
 
@@ -101,9 +101,7 @@ BEGIN
     END CATCH 
 END 
 GO
-EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
-@nombreHoja = 'medios de pago$'
-go
+
 
 
 
@@ -260,9 +258,7 @@ BEGIN
 END;
 GO
 
-EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
-@nombreHoja = 'Empleados$'
-go
+
 
 
 
@@ -360,9 +356,7 @@ BEGIN
 END
 GO
 
-EXEC esquema_Producto.importarImportados @RutaArchivo ='C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Productos_importados.xlsx',
-@nombreHoja = 'Listado de Productos$'
-go
+
 
 
 --------------------------ELECTRONICOS------TABLA PRODUCTO
@@ -460,9 +454,7 @@ BEGIN
 END
 GO
 
-EXEC esquema_Producto.importarElectronico   @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Electronic accessories.xlsx', 
-@nombreHoja ='Sheet1$' 
-go
+
 
 
 -------------------------LINEA DE PRODUCTO-----
@@ -560,9 +552,7 @@ BEGIN
     END CATCH 
 END 
 GO
-EXEC esquema_Producto.importarLineDeProducto @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx', 
-@nombreHoja = 'Clasificacion productos'
-go
+
 
 
 
@@ -654,8 +644,7 @@ BEGIN
   END CATCH 
 END;
 GO
-EXEC esquema_Producto.importarCatalogo 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\catalogo.csv'
-go
+
 
 
 
@@ -780,9 +769,7 @@ BEGIN
   END CATCH 
 END
 GO
-EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
-@nombreHoja = 'sucursal$'
-GO
+
 
 
 
@@ -904,5 +891,4 @@ BEGIN
     END CATCH 
 END
 GO
-EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Ventas_registradas.csv'
-go
+

@@ -1,6 +1,3 @@
-use master 
-go
-
 use ALMACEN_Grupo7
 go
 
@@ -492,7 +489,6 @@ GO
 -------------------------------LINEA DE PRODUCTO
 -------TABLA REFERENCIADA
 CREATE OR ALTER PROCEDURE esquema_Producto.insertarLineaDeProducto
-    @id INT,
     @idProducto INT,
     @lineaDeProducto VARCHAR(20), 
     @productoDescrip VARCHAR(200)
@@ -502,7 +498,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- Verificación de que el ID y ID de Producto no sean NULL
-        IF @id IS NULL OR @idProducto IS NULL 
+        IF  @idProducto IS NULL 
         BEGIN
             RAISERROR ('Se debe enviar el ID y el ID del producto importado', 16, 1);
             RETURN;
@@ -511,15 +507,15 @@ BEGIN
         SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
 
         -- Verificación de existencia de idProducto en la tabla Producto
-        IF NOT EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE id = @idProducto)
+        IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE id = @idProducto)
         BEGIN
-            RAISERROR ('El ID de producto proporcionado no existe en la tabla Producto', 16, 1);
+            RAISERROR ('El ID de linea producto proporcionado existe en la tabla', 16, 1);
             RETURN;
         END
 
         -- Insertar la línea de producto
-        INSERT INTO esquema_Producto.LineaDeProducto (id, idProducto, lineaProducto, productoDescrip)
-        VALUES (@id, @idProducto, @lineaDeProducto, @productoDescrip);
+        INSERT INTO esquema_Producto.LineaDeProducto (lineaProducto, productoDescrip, idProducto)
+        VALUES ( @lineaDeProducto, @productoDescrip, @idProducto);
 
         COMMIT TRANSACTION;
     END TRY
@@ -941,14 +937,14 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- Verificar si ya existe un producto con el idCatalogo
-        IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idCatalogo = @idCatalogo)
+        IF NOT EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idCatalogo = @idCatalogo)
         BEGIN
             RAISERROR('Ya existe un producto con el idCatalogo %d. El id debe ser único.', 16, 1, @idCatalogo);
             RETURN;
         END
 
         -- Verificar si ya existe un producto con el idImportado
-        IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idImportado = @idImportado)
+        IF NOT EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idImportado = @idImportado)
         BEGIN
             RAISERROR('Ya existe un producto con el idImportado %d. El id debe ser único.', 16, 1, @idImportado);
             RETURN;
@@ -971,7 +967,7 @@ BEGIN
             PrecioUnidad = COALESCE(@PrecioUnidad, PrecioUnidad),
             productoElectronicoNombre = COALESCE(@productoElectronicoNombre, productoElectronicoNombre),
             precioUniElectronico = COALESCE(@precioUniElectronico ,precioUniElectronico )
-        
+        WHERE idCatalogo = @idCatalogo
 
         COMMIT TRANSACTION;
 
@@ -1037,7 +1033,6 @@ BEGIN
     END CATCH
 END;
 GO
-
 
 -- Procedimiento para insertar una nueva venta
 CREATE OR ALTER PROCEDURE esquema_Ventas.insertarVentas(

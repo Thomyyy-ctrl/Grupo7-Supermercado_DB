@@ -12,11 +12,11 @@ BEGIN
 	CREATE DATABASE ALMACEN_Grupo7;
     PRINT 'La base de datos ALMACEN_Grupo7 creada.';
 END;
+go
 
 USE ALMACEN_Grupo7
 go
 
---Creacion de esquemas con verificacion si ya existe
 
 IF EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'esquema_Persona')
 BEGIN
@@ -84,57 +84,6 @@ go
 
 --Creacion de tablas con verificacion si ya existe // Cada tabla tiene su propio identificador (PRIMARY KEY) sin suponer que viene de un archivo
 
---------------TABLAS EMPLEADOS Y TIPO DE CLIENTE
-
-IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_Persona' AND TABLE_NAME = 'empleado')
-	BEGIN
-        PRINT 'La tabla empleado ya existe.'
-    END
-    ELSE
-    BEGIN
-        -- Crea la tabla si no existe
-		-- Esta tabla esta encriptada
-CREATE TABLE esquema_Persona.empleado(
-id INT IDENTITY(1,1),
-legajo INT NOT NULL, 
-nombre VARBINARY(256),         -- campo encriptado
-apellido VARBINARY(256),       -- campo encriptado
-nroDoc VARBINARY(256),         -- campo encriptado
-calleYNum VARBINARY(256),      -- campo encriptado
-localidad VARBINARY(256),      -- campo encriptado
-provincia VARBINARY(256),      -- campo encriptado
-cuil VARBINARY(256),           -- campo encriptado
-cargo VARBINARY(256),          -- campo encriptado
-sucursal VARBINARY(256),       -- campo encriptado
-turno VARBINARY(256),          -- campo encriptado
-emailPersonal VARBINARY(256),  -- campo encriptado
-emailEmpresa VARBINARY(256),   -- campo encriptado
-idSucursal int,
-constraint pkId primary key(id),
-constraint fkSucursal foreign key (idSucursal) references esquema_Sucursal.sucursales (id)
-)
-PRINT 'Tabla empleado creada.'
-	END
-go
-
-
-
-IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_Persona' AND TABLE_NAME = 'cliente')
-	BEGIN
-        PRINT 'La tabla cliente ya existe.'
-    END
-    ELSE
-    BEGIN
-        -- Crea la tabla si no existe
-CREATE TABLE esquema_Persona.cliente(
-id int identity (1,1),
-tipoCliente varchar (30),
-Descripcion varchar(100),
-constraint pkClientes_ primary key(id)
-)
-PRINT 'Tabla cliente creada.'
-	END
-go
 
 -------------TABLAS PRODUCTOS(CATALOGO, IMPORTADOS Y ELECTRONICOS) Y LINEA DE PRODUCTO (CLASIFICACION DE PRODUCTO)
 
@@ -221,6 +170,59 @@ PRINT 'Tabla sucursales creada.'
 	END
 go
 
+
+--------------TABLAS EMPLEADOS Y TIPO DE CLIENTE
+
+
+
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_Persona' AND TABLE_NAME = 'cliente')
+	BEGIN
+        PRINT 'La tabla cliente ya existe.'
+    END
+    ELSE
+    BEGIN
+        -- Crea la tabla si no existe
+CREATE TABLE esquema_Persona.cliente(
+id int identity (1,1),
+tipoCliente varchar (30),
+Descripcion varchar(100),
+constraint pkClientes_ primary key(id)
+)
+PRINT 'Tabla cliente creada.'
+	END
+go
+
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_Persona' AND TABLE_NAME = 'empleado')
+	BEGIN
+        PRINT 'La tabla empleado ya existe.'
+    END
+    ELSE
+    BEGIN
+        -- Crea la tabla si no existe
+		-- Esta tabla esta encriptada
+CREATE TABLE esquema_Persona.empleado(
+id INT IDENTITY(1,1),
+legajo INT NOT NULL, 
+nombre VARBINARY(256),         -- campo encriptado
+apellido VARBINARY(256),       -- campo encriptado
+nroDoc VARBINARY(256),         -- campo encriptado
+calleYNum VARBINARY(256),      -- campo encriptado
+localidad VARBINARY(256),      -- campo encriptado
+provincia VARBINARY(256),      -- campo encriptado
+cuil VARBINARY(256),           -- campo encriptado
+cargo VARBINARY(256),          -- campo encriptado
+sucursal VARBINARY(256),       -- campo encriptado
+turno VARBINARY(256),          -- campo encriptado
+emailPersonal VARBINARY(256),  -- campo encriptado
+emailEmpresa VARBINARY(256),   -- campo encriptado
+idSucursal int,
+constraint pkId primary key(id),
+constraint fkSucursal foreign key (idSucursal) references esquema_Sucursal.sucursales (id)
+)
+PRINT 'Tabla empleado creada.'
+	END
+go
+
 ------------TABLAS DE MEDIOS DE PAGO, FACTURA,  DETALLE DE VENTA Y NOTA DE CREDITO
 
 IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_operaciones' AND TABLE_NAME = 'MediosDePago')
@@ -270,32 +272,6 @@ PRINT 'Tabla factura creada.'
 	END
 go
 
-IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_operaciones' AND TABLE_NAME = 'DetalleDeVenta')
-	BEGIN
-        PRINT 'La tabla detalle de venta ya existe.'
-    END
-    ELSE
-    BEGIN
-	 -- Crea la tabla si no existe
-CREATE TABLE esquema_operaciones.DetalleDeVenta(
-id int identity(1,1),
-Código int not null,
-Descripción varchar(30),
-PrecioUnitario decimal(4,2),
-Cantidad int,
-Subtotal decimal(5,2),
-
-----Foreign key
-
-idVenta int,
-idProducto int,
-constraint pkidDetalle primary key (id),
-constraint fkProducto foreign key (idProducto) references esquema_Producto.Producto (id),
-constraint fkVenta foreign key (idVenta) references esquema_Ventas.ventasRegistradas
-)
-PRINT 'Tabla detalle de venta creada.'
-	END
-go
 
 IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_operaciones' AND TABLE_NAME = 'NotaDeCredito')
 	BEGIN
@@ -378,6 +354,32 @@ PRINT 'Tabla ventas registradas creada.'
 	END
 go
 
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_operaciones' AND TABLE_NAME = 'DetalleDeVenta')
+	BEGIN
+        PRINT 'La tabla detalle de venta ya existe.'
+    END
+    ELSE
+    BEGIN
+	 -- Crea la tabla si no existe
+CREATE TABLE esquema_operaciones.DetalleDeVenta(
+id int identity(1,1),
+Código int not null,
+Descripción varchar(30),
+PrecioUnitario decimal(4,2),
+Cantidad int,
+Subtotal decimal(5,2),
+
+----Foreign key
+
+idVenta int,
+idProducto int,
+constraint pkidDetalle primary key (id),
+constraint fkProducto foreign key (idProducto) references esquema_Producto.Producto (id),
+constraint fkVenta foreign key (idVenta) references esquema_Ventas.ventasRegistradas
+)
+PRINT 'Tabla detalle de venta creada.'
+	END
+go
 
 
 

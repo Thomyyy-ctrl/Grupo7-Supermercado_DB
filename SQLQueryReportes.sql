@@ -1,7 +1,7 @@
 USE ALMACEN_Grupo7
 GO
 
-----------------------REPORTE MENSUAL---------------------------------------
+---------------------------REPORTE MENSUAL---------------------------------------
 CREATE OR ALTER PROCEDURE esquema_Ventas.GenerarReporteMensualXML
     @Mes INT,         -- Mes que quieres reportar
     @Año INT          -- Año que quieres reportar
@@ -71,8 +71,7 @@ BEGIN
 END;
 GO
 
-EXEC esquema_Ventas.GenerarReporteMensualXML @Mes = 3, @Año = 2019;
-GO
+
 ----------------------REPORTE TRIMESTRAL------------------------------------
 CREATE OR ALTER PROCEDURE esquema_Ventas.GenerarReporteTrimestralXML
     @Trimestre INT,   -- Trimestre para el reporte (1 = Enero-Marzo, 2 = Abril-Junio, etc.)
@@ -179,8 +178,7 @@ BEGIN
 END;
 GO
 
-EXEC esquema_Ventas.GenerarReporteTrimestralXML @Trimestre = 1, @Año = 2019;
-GO
+
 
 ----------------------REPORTE POR RANGO DE FECHAS---------------------------
 CREATE OR ALTER PROCEDURE esquema_Ventas.GenerarReportePorRangoFechasXML
@@ -245,8 +243,6 @@ BEGIN
 END;
 GO
 
-EXEC esquema_Ventas.GenerarReportePorRangoFechasXML '2019-01-01', '2019-03-20';
-GO
 
 ----------------------REPORTE POR RANGO DE FECHAS EXTENDIDO---------------------------
 CREATE OR ALTER PROCEDURE esquema_Ventas.GenerarReporteVentasExtendidoXML
@@ -357,15 +353,5 @@ BEGIN
     END CATCH
 END;
 GO
-
--- Llamada al procedimiento almacenado pasando los valores directamente
-EXEC esquema_Ventas.GenerarReporteVentasExtendidoXML 
-    '2019-01-01',         -- FechaInicio
-    '2019-03-01',         -- FechaFin
-    '2019-01-01',         -- MesAño (aquí pasas un valor de fecha)
-    '2019-02-01',         -- FechaEspecifica
-    'Yangon';             -- SucursalCiudad
-
-
 
 

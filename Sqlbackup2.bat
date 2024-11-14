@@ -1,1 +1,0 @@
- sqlcmd -S .\SQLEXPRESS -E -Q "EXEC sp_BackupDatabases @backupLocation='C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Backup\Backup.bak', @databaseName='ALMACEN_Grupo7', @backupType='F'"

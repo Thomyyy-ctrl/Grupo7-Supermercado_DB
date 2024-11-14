@@ -1,6 +1,8 @@
 USE ALMACEN_Grupo7
 GO
 
+
+
 ---------------------------REPORTE MENSUAL---------------------------------------
 CREATE OR ALTER PROCEDURE esquema_Ventas.GenerarReporteMensualXML
     @Mes INT,         -- Mes que quieres reportar

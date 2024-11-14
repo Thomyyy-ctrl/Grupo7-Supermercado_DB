@@ -1,14 +1,29 @@
 
 USE [master]  
 GO  
+
 SET ANSI_NULLS ON  
 GO  
 SET QUOTED_IDENTIFIER ON  
 GO  
+
+-------------------Creo el esquema respaldo
+
+IF EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'esquema_Respaldo')
+BEGIN
+    PRINT 'esquema_Respaldo ya existente';
+END
+ELSE
+BEGIN
+    EXEC('CREATE SCHEMA esquema_Respaldo');
+    PRINT 'esquema_Respaldo creado';
+END;
+go
 ----------------Realizar Backup
 -----------Realizo el backup cada dia de la semana de la base de datos
+-----------Habran 7 archivos .bak, cada uno correspondiente a un dia distinto de la semana
 
-CREATE or alter PROCEDURE [dbo].[sp_BackupDatabases]   
+CREATE or alter PROCEDURE [esquema_Respaldo].[sp_BackupDatabases]   
             @databaseName sysname = null, 
             @backupType CHAR(1), 
             @backupLocation nvarchar(200)  
@@ -90,5 +105,23 @@ AS
 
 SELECT @Loop = min(ID) FROM @DBs where ID>@Loop 
 END 
+go
+ 
 
-  
+
+-------------------------RESTAURAR LA BASE DE DATOS:
+
+CREATE or alter PROCEDURE [esquema_Respaldo].[sp_RestoreDatabases] 
+@path nvarchar(200),
+@dateBaseName varchar(20)
+as
+begin
+	RESTORE DATABASE @dateBaseName FROM  DISK =  @path 
+	WITH  FILE = 1,  NOUNLOAD,  STATS = 5
+end
+GO
+
+----primero elimino la base de datos, luego ejecuto el SP
+----exec se lleva la ubicacion del .bak y el nombre de la base de datos
+exec [esquema_Respaldo].[sp_RestoreDatabases]  N'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Backup\Backup.bakALMACEN_Grupo7_FULL_Dia5.bak','ALMACEN_Grupo7'
+go

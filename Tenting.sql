@@ -11,11 +11,11 @@ exec esquema_Sucursal.insertarSucursal 'AMBA','fam','Zapata 5664','La Matanza 17
 go
 select* from esquema_Sucursal.sucursales
 go
-exec esquema_Sucursal.modificarSucursal 3,'AMBA','fam','Zapata 5664','La Matanza 1757','Buenos Aires','12 a 16','23434341'
+exec esquema_Sucursal.modificarSucursal 1,'AMBA','fam','Zapata 5664','La Matanza 1757','Buenos Aires','12 a 16','23434341'
 go
 select* from esquema_Sucursal.sucursales
 go
-exec esquema_Sucursal.eliminarSucursal 3
+exec esquema_Sucursal.eliminarSucursal 1
 go
 select* from esquema_Sucursal.sucursales
 go
@@ -162,41 +162,41 @@ GO
 ---TESTING DE ENTREGA NRO 4
 
 --IMPORTAR MEDIOS DE PAGO
-EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'medios de pago$'
 go
 
 --IMPORTAR EMPLEADOS
-EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'Empleados$'
 go
 
 --IMPORTAR IMPORTADOS
-EXEC esquema_Producto.importarImportados @RutaArchivo ='C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Productos\Productos_importados.xlsx',
+EXEC esquema_Producto.importarImportados @RutaArchivo ='C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Productos\Productos_importados.xlsx',
 @nombreHoja = 'Listado de Productos$'
 go
 
 --IMPORTAR ELECTRICO
-EXEC esquema_Producto.importarElectronico   @RutaArchivo = 'C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Productos\Electronic accessories.xlsx', 
+EXEC esquema_Producto.importarElectronico   @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Productos\Electronic accessories.xlsx', 
 @nombreHoja ='Sheet1$' 
 go
 
 --IMPORTAR LINEA PRODUCTO
-EXEC esquema_Producto.importarLineDeProducto @RutaArchivo = 'C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Informacion_complementaria.xlsx', 
+EXEC esquema_Producto.importarLineDeProducto @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx', 
 @nombreHoja = 'Clasificacion productos'
 go
 
 --IMPORTAR CATALOGO
-EXEC esquema_Producto.importarCatalogo 'C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Productos\catalogo.csv'
+EXEC esquema_Producto.importarCatalogo 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Productos\catalogo.csv'
 go
 
 --IMPORTAR SUCURSAL
-EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'sucursal$'
 GO
 
 --IMPORTAR VENTAS REGISTRADAS
-EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\Fafuh\Desktop\SUPER BDD\Nueva carpeta\Archivos\Ventas_registradas.csv'
+EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Ventas_registradas.csv'
 go
 
 ---TESTING ENTREGA NRO 5
@@ -206,18 +206,24 @@ exec esquema_Persona.ObtenerEmpleadoDesencriptado 1
 GO
 
 --INSERTAR NOTA DE CREDITO
-exec esquema_operaciones.insertarNotaDeCredito 2001, 'A', 'miembro', '2024-11-14', 125.00, 'Consecuencia', 1, 1 --No se ejecutara porque necesita permisos de supervisor
+exec esquema_operaciones.insertarNotaDeCredito 2001, 'A', 'miembro', '2024-11-14', 125.00, 'Consecuencia', 1, 1 
 GO
 
----PRUEBA DE EJECUCION REPORTES
+-----------------------PRUEBA DE EJECUCION REPORTES
 --Llamada reporte mensual
 EXEC esquema_Ventas.GenerarReporteMensualXML @Mes = 3, @Año = 2019;
+GO
+SELECT * FROM esquema_RespaldoXML.RespaldoMensualXML
 GO
 --Llamada reporte trimestral
 EXEC esquema_Ventas.GenerarReporteTrimestralXML @Trimestre = 1, @Año = 2019;
 GO
+SELECT * FROM esquema_RespaldoXML.RespaldoTrimestralXML
+GO
 --Llamada reporte por rango fecha
 EXEC esquema_Ventas.GenerarReportePorRangoFechasXML '2019-01-01', '2019-03-20';
+GO
+SELECT * FROM esquema_RespaldoXML.RespaldoPorRangoFechasXML 
 GO
 
 --Llamada al procedimiento almacenado pasando los valores directamente
@@ -228,5 +234,9 @@ EXEC esquema_Ventas.GenerarReporteVentasExtendidoXML
     '2019-02-01',         -- FechaEspecifica
     'Yangon';             -- SucursalCiudad
 GO
+SELECT * FROM esquema_RespaldoXML.RespaldoVentasExtendidoXML
+GO
+
+
 
 

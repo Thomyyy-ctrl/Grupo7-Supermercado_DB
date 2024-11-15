@@ -1,6 +1,8 @@
+USE master
+go
+
 USE ALMACEN_Grupo7
 GO
-
 
 
 ---------------------------REPORTE MENSUAL---------------------------------------
@@ -57,6 +59,8 @@ BEGIN
                                ORDER BY OrdenDia
                                FOR XML PATH('Dia'), ROOT('ReporteMensual'));
 
+		INSERT INTO esquema_RespaldoXML.RespaldoMensualXML(DatosXML)
+		VALUES(@ReporteMensual)
         -- Devolvemos la variable XML con el reporte mensual
         SELECT @ReporteMensual AS ReporteMensual;
 
@@ -166,6 +170,8 @@ BEGIN
             FOR XML PATH('Dia'), ROOT('ReporteTrimestral')  -- Genera el reporte XML
         );
 
+		INSERT INTO esquema_RespaldoXML.RespaldoTrimestralXML(DatosXML)
+		VALUES(@XMLResult)
         -- Devolver el resultado XML
         SELECT @XMLResult AS ReporteTrimestralXML;
 
@@ -232,7 +238,11 @@ BEGIN
         );
 
         -- Devuelve el resultado XML directamente
+		INSERT INTO esquema_RespaldoXML.RespaldoPorRangoFechasXML(DatosXML)
+		VALUES(@ReporteXML)
+
         SELECT @ReporteXML AS ReportePorRangoDeFechasXML;
+
 
     END TRY
     BEGIN CATCH
@@ -339,6 +349,14 @@ BEGIN
             FOR XML PATH('Venta'), ROOT('DetalleVentasEspecifica')
         );
 
+		INSERT INTO esquema_RespaldoXML.RespaldoVentasExtendidoXML
+		(
+		DatosXMLReporteSucursal,                    
+		DatosXMLTop5MasVendidosPorSemanaEnUnMes,
+		DatosXMLTop5MenosVendidosEnElMes,
+		DatosXMLDetalleVentasEspecifica
+		)
+		VALUES(@ReporteSucursal,@Top5MasVendidosPorSemanaEnUnMes,@Top5MenosVendidosEnElMes, @DetalleVentasEspecifica)
         -- Devolvemos el XML generado en el reporte
         SELECT @ReporteSucursal AS ReporteSucursal,
                @Top5MasVendidosPorSemanaEnUnMes AS Top5MasVendidosPorSemanaEnUnMes,
@@ -357,3 +375,83 @@ END;
 GO
 
 
+-----------------------------RESPALDO DE LOS REPORTES
+
+IF EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'esquema_RespaldoXML')
+BEGIN
+    PRINT 'esquema_RespaldoXML ya existente';
+END
+ELSE
+BEGIN
+    EXEC('CREATE SCHEMA esquema_RespaldoXML');
+    PRINT 'esquema_RespaldoXML creado';
+END;
+go
+
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_RespaldoXML' AND TABLE_NAME = 'RespaldoMensualXML')
+	BEGIN
+        PRINT 'La tabla RespaldoMensualXML ya existe.'
+    END
+    ELSE
+    BEGIN
+	 -- Crea la tabla si no existe
+	 CREATE TABLE esquema_RespaldoXML.RespaldoMensualXML (
+    ID INT IDENTITY PRIMARY KEY,      -- Campo de clave primaria
+    FechaRespaldo DATETIME DEFAULT GETDATE(),  -- Campo para registrar la fecha del respaldo
+    DatosXML XML                        -- Campo para almacenar el contenido XML
+);
+
+PRINT 'Tabla RespaldoMensualXML creada.'
+	END
+go
+
+
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_RespaldoXML' AND TABLE_NAME = 'RespaldoTrimestralXML')
+	BEGIN
+        PRINT 'La tabla RespaldoTrimestralXML ya existe.'
+    END
+    ELSE
+    BEGIN
+	 -- Crea la tabla si no existe
+	 CREATE TABLE esquema_RespaldoXML.RespaldoTrimestralXML (
+    ID INT IDENTITY PRIMARY KEY,      -- Campo de clave primaria
+    FechaRespaldo DATETIME DEFAULT GETDATE(),  -- Campo para registrar la fecha del respaldo
+    DatosXML XML                        -- Campo para almacenar el contenido XML
+);
+PRINT 'Tabla RespaldoTrimestralXML creada.'
+	END
+go
+
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_RespaldoXML' AND TABLE_NAME = 'RespaldoPorRangoFechasXML')
+	BEGIN
+        PRINT 'La tabla RespaldoPorRangoFechasXML ya existe.'
+    END
+    ELSE
+    BEGIN
+	 -- Crea la tabla si no existe
+	 CREATE TABLE esquema_RespaldoXML.RespaldoPorRangoFechasXML (
+    ID INT IDENTITY PRIMARY KEY,      -- Campo de clave primaria
+    FechaRespaldo DATETIME DEFAULT GETDATE(),  -- Campo para registrar la fecha del respaldo
+    DatosXML XML                        -- Campo para almacenar el contenido XML
+);
+PRINT 'Tabla RespaldoPorRangoFechasXML creada.'
+	END
+go
+
+IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_RespaldoXML' AND TABLE_NAME = 'RespaldoVentasExtendidoXML')
+	BEGIN
+        PRINT 'La tabla RespaldoVentasExtendidoXML ya existe.'
+    END
+    ELSE
+    BEGIN
+		 CREATE TABLE esquema_RespaldoXML.RespaldoVentasExtendidoXML  (
+		ID INT IDENTITY PRIMARY KEY,      -- Campo de clave primaria
+		FechaRespaldo DATETIME DEFAULT GETDATE(),  -- Campo para registrar la fecha del respaldo
+		DatosXMLReporteSucursal XML,                        -- Campo para almacenar el contenido XML
+		DatosXMLTop5MasVendidosPorSemanaEnUnMes XML,
+		DatosXMLTop5MenosVendidosEnElMes XML,
+		DatosXMLDetalleVentasEspecifica XML,
+		);
+PRINT 'Tabla RespaldoVentasExtendidoXML creada.'
+	END
+go

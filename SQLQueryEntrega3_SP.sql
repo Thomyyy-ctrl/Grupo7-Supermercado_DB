@@ -1,4 +1,4 @@
-use ALMACEN_Grupo7
+use SUPERMERCADO_Grupo7
 go
 
 -------------------------- EMPLEADOS--------STORES MODIFICADOS PARA LA ENCRIPTACION
@@ -18,7 +18,7 @@ CREATE OR ALTER PROCEDURE esquema_Persona.insertarEmpleado(
     @turno VARCHAR(50),
     @emailPersonal VARCHAR(100),
     @emailEmpresa VARCHAR(100),
-	@idSucursal INT
+    @idSucursal INT
 )
 AS
 BEGIN
@@ -33,6 +33,20 @@ BEGIN
             RETURN;
         END
 
+        -- Verificar si ya existe un empleado con el mismo legajo o número de documento
+        IF EXISTS (
+            SELECT 1 
+            FROM esquema_Persona.empleado 
+            WHERE 
+                legajo = ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @legajo))
+                OR nroDoc = ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @nroDoc))
+        )
+        BEGIN
+            RAISERROR('Error: Ya existe un empleado con el mismo legajo o número de documento.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
         SET NOCOUNT ON; -- Evita mostrar la cantidad de filas afectadas.
 
         -- Inserta los valores encriptados en la tabla empleado
@@ -40,7 +54,7 @@ BEGIN
             legajo, nombre, apellido, nroDoc, calleYNum, localidad, provincia, cuil, cargo, sucursal, turno, emailPersonal, emailEmpresa
         )
         VALUES (
-            @legajo,
+            ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @legajo)),
             ENCRYPTBYPASSPHRASE('FraseSegura', @nombre),
             ENCRYPTBYPASSPHRASE('FraseSegura', @apellido),
             ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @nroDoc)),
@@ -76,7 +90,8 @@ BEGIN
     END CATCH
 END;
 GO
------Primero desencripto los datos y luego mientras modifico los datos los ecripta nuevamente
+
+-- Encripta los datos de ID y legajo y despues compara con los datos encriptados en la tabla
 CREATE OR ALTER PROCEDURE esquema_Persona.modificarEmpleado(
     @id INT,
     @legajo INT,
@@ -92,7 +107,7 @@ CREATE OR ALTER PROCEDURE esquema_Persona.modificarEmpleado(
     @turno VARCHAR(50),
     @emailPersonal VARCHAR(100),
     @emailEmpresa VARCHAR(100),
-	@idSucursal int
+    @idSucursal INT
 )
 AS
 BEGIN
@@ -109,8 +124,15 @@ BEGIN
 
         SET NOCOUNT ON;
 
-        -- Verificar si el empleado existe
-        IF NOT EXISTS (SELECT 1 FROM esquema_Persona.empleado WHERE legajo = @legajo AND id = @id)
+        -- Encriptar el legajo y el ID proporcionados como parámetros
+        DECLARE @legajoEncriptado VARBINARY(MAX);
+        DECLARE @idEncriptado VARBINARY(MAX);
+
+        SET @legajoEncriptado = ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @legajo));
+        SET @idEncriptado = ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @id));
+
+        -- Verificar si el empleado existe (comparando los valores encriptados)
+        IF NOT EXISTS (SELECT 1 FROM esquema_Persona.empleado WHERE legajo = @legajoEncriptado AND id = @idEncriptado)
         BEGIN
             RAISERROR('Error: El empleado con el ID y legajo especificados no existe.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -140,7 +162,7 @@ BEGIN
             turno = COALESCE(ENCRYPTBYPASSPHRASE('FraseSegura', @turno), turno),
             emailPersonal = COALESCE(ENCRYPTBYPASSPHRASE('FraseSegura', @emailPersonal), emailPersonal),
             emailEmpresa = COALESCE(ENCRYPTBYPASSPHRASE('FraseSegura', @emailEmpresa), emailEmpresa)
-        WHERE legajo = @legajo AND id = @id;
+        WHERE legajo = @legajoEncriptado AND id = @idEncriptado;
 
         COMMIT TRANSACTION;
     END TRY
@@ -162,7 +184,8 @@ BEGIN
     END CATCH
 END;
 GO
------Primero descripto los datos para eliminarlos
+
+-- Encripta los datos de ID y legajo y despues compara con los datos encriptados en la tabla
 CREATE OR ALTER PROCEDURE esquema_Persona.eliminarEmpleado( 
     @id INT,
     @legajo INT)
@@ -171,6 +194,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         
+        -- Validar que los parámetros no sean NULL
         IF @legajo IS NULL OR @id IS NULL
         BEGIN
             RAISERROR ('Se debe enviar el legajo y el ID del empleado', 16, 1);
@@ -179,14 +203,22 @@ BEGIN
 
         SET NOCOUNT ON;
 
-        -- Verificar si el empleado existe
-        IF EXISTS (SELECT 1 FROM esquema_Persona.empleado WHERE legajo = @legajo AND id = @id)
+        -- Encriptar los parámetros legajo y id
+        DECLARE @legajoEncriptado VARBINARY(MAX);
+        DECLARE @idEncriptado VARBINARY(MAX);
+
+        SET @legajoEncriptado = ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @legajo));
+        SET @idEncriptado = ENCRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), @id));
+
+        -- Verificar si el empleado existe en la base de datos (comparando los valores encriptados)
+        IF EXISTS (SELECT 1 FROM esquema_Persona.empleado WHERE legajo = @legajoEncriptado AND id = @idEncriptado)
         BEGIN
-            -- Eliminar el empleado
-            DELETE FROM esquema_Persona.empleado WHERE legajo = @legajo AND id = @id;
+            -- Eliminar el empleado si existe
+            DELETE FROM esquema_Persona.empleado WHERE legajo = @legajoEncriptado AND id = @idEncriptado;
         END
         ELSE
         BEGIN
+            -- Si el empleado no existe, lanzar un error
             RAISERROR ('No existe empleado con legajo %d y ID %d', 16, 1, @legajo, @id);
             RETURN;
         END
@@ -194,6 +226,7 @@ BEGIN
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
+        -- En caso de error, revertir la transacción
         ROLLBACK TRANSACTION;
 
         DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
@@ -211,6 +244,7 @@ BEGIN
 END;
 GO
 
+
 --------------------------------------TIPO DE CLIENTES:
 -------TABLA NO REFERENCIADA
 CREATE OR ALTER PROCEDURE esquema_Persona.insertarTipoDeCliente
@@ -220,9 +254,21 @@ AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
-        
+
         SET NOCOUNT ON; -- No mostrar la cantidad de filas afectadas.
         
+        -- Verificar si ya existe un tipo de cliente con el mismo nombre
+        IF EXISTS (
+            SELECT 1 
+            FROM esquema_Persona.cliente 
+            WHERE tipoCliente = @tipoCliente
+        )
+        BEGIN
+            RAISERROR('Error: Ya existe un tipo de cliente con el nombre especificado.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
         -- Insertar nuevo tipo de cliente
         INSERT INTO esquema_Persona.cliente (tipoCliente, Descripcion)
         VALUES (@tipoCliente, @Descripcion);
@@ -246,6 +292,7 @@ BEGIN
     END CATCH
 END;
 GO
+
 
 CREATE OR ALTER PROCEDURE esquema_Persona.modificarTipoDeCliente
     @id INT,
@@ -351,9 +398,9 @@ GO
 ------------------------------------MEDIOS DE PAGO
 -------TABLA NO REFERNCIADA
 CREATE OR ALTER PROCEDURE esquema_operaciones.insertarMedioDePago(
-    
     @MedioDePago VARCHAR(50),
-    @NombreEs VARCHAR(50))
+    @NombreEs VARCHAR(50)
+)
 AS
 BEGIN
     BEGIN TRY
@@ -361,9 +408,21 @@ BEGIN
 
         SET NOCOUNT ON;  -- No mostrar la cantidad de filas insertadas por consola.
 
+        -- Verificar si ya existe el medio de pago
+        IF EXISTS (
+            SELECT 1 
+            FROM esquema_operaciones.mediosDePago 
+            WHERE MedioDePago = @MedioDePago
+        )
+        BEGIN
+            RAISERROR('Error: El medio de pago ya existe.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
         -- Insertar el medio de pago
-        INSERT INTO esquema_operaciones.mediosDePago ( MedioDePago, NombreEs)
-        VALUES ( @MedioDePago, @NombreEs);
+        INSERT INTO esquema_operaciones.mediosDePago (MedioDePago, NombreEs)
+        VALUES (@MedioDePago, @NombreEs);
 
         COMMIT TRANSACTION;
     END TRY
@@ -379,8 +438,8 @@ BEGIN
             @ErrorState = ERROR_STATE();
 
         -- Lanzar el error con RAISERROR
-        RAISERROR ('No se pudo insertar el medio de pago. Detalles: %s', 
-                    @ErrorSeverity, @ErrorState,  @ErrorMessage);
+        RAISERROR('No se pudo insertar el medio de pago. Detalles: %s', 
+                    @ErrorSeverity, @ErrorState, @ErrorMessage);
     END CATCH
 END;
 GO
@@ -497,25 +556,34 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Verificación de que el ID y ID de Producto no sean NULL
-        IF  @idProducto IS NULL 
+        -- Verificación de que el ID de Producto no sea NULL
+        IF @idProducto IS NULL
         BEGIN
-            RAISERROR ('Se debe enviar el ID y el ID del producto importado', 16, 1);
+            RAISERROR('Se debe enviar el ID del producto', 16, 1);
             RETURN;
         END
 
         SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
 
         -- Verificación de existencia de idProducto en la tabla Producto
-        IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE id = @idProducto)
+        IF NOT EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE id = @idProducto)
         BEGIN
-            RAISERROR ('El ID de linea producto proporcionado existe en la tabla', 16, 1);
+            RAISERROR('El ID de producto proporcionado no existe en la tabla Producto', 16, 1);
+            RETURN;
+        END
+
+        -- Verificar si ya existe la línea de producto para el idProducto
+        IF EXISTS (SELECT 1 
+                   FROM esquema_Producto.LineaDeProducto 
+                   WHERE idProducto = @idProducto AND lineaProducto = @lineaDeProducto)
+        BEGIN
+            RAISERROR('La línea de producto ya existe para el producto con ID %d', 16, 1, @idProducto);
             RETURN;
         END
 
         -- Insertar la línea de producto
         INSERT INTO esquema_Producto.LineaDeProducto (lineaProducto, productoDescrip, idProducto)
-        VALUES ( @lineaDeProducto, @productoDescrip, @idProducto);
+        VALUES (@lineaDeProducto, @productoDescrip, @idProducto);
 
         COMMIT TRANSACTION;
     END TRY
@@ -531,11 +599,12 @@ BEGIN
             @ErrorState = ERROR_STATE();
 
         -- Lanzar el error con RAISERROR
-        RAISERROR ('No se pudo insertar la clasificación. Detalles: %s', 
+        RAISERROR('No se pudo insertar la línea de producto. Detalles: %s', 
                     @ErrorSeverity, @ErrorState, @ErrorMessage);
     END CATCH
 END;
 GO
+
 
 CREATE OR ALTER PROCEDURE esquema_Producto.modificarLineaDeProducto
     @id INT,
@@ -660,7 +729,14 @@ BEGIN
 
         SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
 
-        -- Inserción de la sucursal en la tabla
+        -- Verificar si ya existe una sucursal con el mismo calleYNum
+        IF EXISTS (SELECT 1 FROM esquema_Sucursal.sucursales WHERE calleYNum = @calleYNum)
+        BEGIN
+            RAISERROR('Ya existe una sucursal con el mismo calle y número: %s', 16, 1, @calleYNum);
+            RETURN;
+        END
+
+        -- Inserción de la nueva sucursal
         INSERT INTO esquema_Sucursal.sucursales (
             ciudad,
             reemplazadaX,
@@ -700,6 +776,7 @@ BEGIN
     END CATCH
 END;
 GO
+
 
 CREATE OR ALTER PROCEDURE esquema_Sucursal.modificarSucursal (
     @id INT,
@@ -836,7 +913,7 @@ CREATE OR ALTER PROCEDURE esquema_Producto.insertarProducto
     @CantidadxUnidad VARCHAR(50), 
     @PrecioUnidad DECIMAL(5,2),
     @productoElectronicoNombre VARCHAR(150),
-    @precioUniElectronico decimal(38,2)
+    @precioUniElectronico DECIMAL(38,2)
 )
 AS
 BEGIN
@@ -854,6 +931,16 @@ BEGIN
         IF EXISTS (SELECT 1 FROM esquema_Producto.Producto WHERE idImportado = @idImportado)
         BEGIN
             RAISERROR('Ya existe un producto con el idImportado %d. El id debe ser único.', 16, 1, @idImportado);
+            RETURN;
+        END
+
+        -- Verificar si ya existe un producto electrónico con el mismo nombre y precio
+        IF EXISTS (SELECT 1 FROM esquema_Producto.Producto 
+                   WHERE productoElectronicoNombre = @productoElectronicoNombre 
+                     AND precioUniElectronico = @precioUniElectronico)
+        BEGIN
+            RAISERROR('Ya existe un producto electrónico con el mismo nombre y precio. Nombre: %s, Precio: %f.', 
+                        16, 1, @productoElectronicoNombre, @precioUniElectronico);
             RETURN;
         END
 
@@ -912,6 +999,7 @@ BEGIN
     END CATCH
 END;
 GO
+
 
 CREATE OR ALTER PROCEDURE esquema_Producto.modificarProducto
 (
@@ -1048,7 +1136,8 @@ CREATE OR ALTER PROCEDURE esquema_Ventas.insertarVentas(
     @Hora TIME,
     @MedioDePago VARCHAR(20),
     @Empleado INT,
-    @IdIdentificador VARCHAR(50))
+    @IdIdentificador VARCHAR(50)
+)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1056,9 +1145,16 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
+        -- Verificar si el idFactura ya existe en la tabla ventasRegistradas
+        IF EXISTS (SELECT 1 FROM esquema_Ventas.ventasRegistradas WHERE idFactura = @idFactura)
+        BEGIN
+            RAISERROR('Ya existe una venta con el idFactura %d. El idFactura debe ser único.', 16, 1, @idFactura);
+            RETURN;  -- Si existe, sale del procedimiento sin continuar con la inserción
+        END
+
         -- Insertar la venta
-        INSERT INTO esquema_Ventas.ventasRegistradas(idFactura,tipoDeFactura, ciudad, tipoDeCliente, genero, producto, precioUnitario, cantidad, fecha, hora, medioDePago,idIdentificador)
-        VALUES (@idFactura,@TipoDeFactura, @Ciudad, @TipoDeCliente, @Genero, @Producto, @PrecioUnitario, @Cantidad, @Fecha, @Hora, @MedioDePago,  @IdIdentificador);
+        INSERT INTO esquema_Ventas.ventasRegistradas(idFactura, tipoDeFactura, ciudad, tipoDeCliente, genero, producto, precioUnitario, cantidad, fecha, hora, medioDePago, idIdentificador)
+        VALUES (@idFactura, @TipoDeFactura, @Ciudad, @TipoDeCliente, @Genero, @Producto, @PrecioUnitario, @Cantidad, @Fecha, @Hora, @MedioDePago, @IdIdentificador);
 
         -- Obtener el ID de la venta insertada
         DECLARE @NuevoVentaID INT = SCOPE_IDENTITY();
@@ -1083,6 +1179,7 @@ BEGIN
     END CATCH
 END;
 GO
+
 
 -- Procedimiento para insertar los detalles de la venta
 CREATE OR ALTER PROCEDURE esquema_operaciones.insertarDetalleDeVenta(
@@ -1113,7 +1210,12 @@ BEGIN TRY
             RAISERROR ('El ID de producto proporcionado no existe en la tabla Producto', 16, 1);
             RETURN;
         END
-      
+       -- Verificación de existencia de idVenta en la tabla Ventas
+        IF NOT EXISTS (SELECT 1 FROM esquema_Ventas.ventasRegistradas where id = @VentaID)
+        BEGIN
+            RAISERROR ('El ID de Ventas no existe', 16, 1);
+            RETURN;
+        END
         -- Insertar los detalles de la venta
         INSERT INTO esquema_operaciones.DetalleDeVenta (Código, Descripción, PrecioUnitario, Cantidad, Subtotal)
         VALUES (@Codigo, @Descripcion, @PrecioUnitario, @Cantidad, @Subtotal)
@@ -1148,7 +1250,9 @@ CREATE OR ALTER PROCEDURE esquema_operaciones.insertarFactura(
     @TipoDeFactura VARCHAR(1),  -- Tipo de factura ('A', 'B', 'C')
     @CiudadDeSucursal VARCHAR(20),  -- Ciudad de la sucursal
     @MedioDePago VARCHAR(30),  -- Medio de pago
-    @IdMedioDePago INT)  -- ID del medio de pago
+    @Estado VARCHAR(30),  -- Estado de la factura
+    @IdMedioDePago INT  -- ID del medio de pago
+)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1156,17 +1260,32 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 		
-        SET NOCOUNT ON; -- No mostrar la cantidad de filas insertadas en consola
-
-        -- Verificación de existencia de idProducto en la tabla Producto
-        IF NOT EXISTS (SELECT 1 FROM esquema_operaciones.MediosDePago where id = @idMedioDepago)
+        -- Verificación de existencia de idMedioDePago en la tabla MediosDePago
+        IF NOT EXISTS (SELECT 1 FROM esquema_operaciones.MediosDePago WHERE id = @IdMedioDePago)
         BEGIN
             RAISERROR ('El ID del medio de pago no existe', 16, 1);
             RETURN;
         END
+
+        -- Verificación de existencia de idVenta en la tabla Ventas
+        IF NOT EXISTS (SELECT 1 FROM esquema_Ventas.ventasRegistradas WHERE id = @VentaID)
+        BEGIN
+            RAISERROR ('El ID de Ventas no existe', 16, 1);
+            RETURN;
+        END
+        
+        -- Verificación de existencia de idFactura en la tabla Factura
+        IF EXISTS (SELECT 1 FROM esquema_operaciones.Factura WHERE NroFactura = @idFactura)
+        BEGIN
+            RAISERROR ('El número de factura %d ya existe. El número de factura debe ser único.', 16, 1, @idFactura);
+            RETURN;
+        END
+
         -- Insertar la factura
-        INSERT INTO esquema_operaciones.Factura (NroFactura, FechaEmision, HoraEmision, IdEmpleado, Total, TipoDeFactura, CiudadDeSucursal, MedioDePago)
-        VALUES (@idFactura, @FechaEmision, @HoraEmision, @IdEmpleado, @Total, @TipoDeFactura, @CiudadDeSucursal, @MedioDePago);
+        INSERT INTO esquema_operaciones.Factura 
+            (NroFactura, FechaEmision, HoraEmision, IdEmpleado, Total, TipoDeFactura, CiudadDeSucursal, MedioDePago, Estado)
+        VALUES 
+            (@idFactura, @FechaEmision, @HoraEmision, @IdEmpleado, @Total, @TipoDeFactura, @CiudadDeSucursal, @MedioDePago, @Estado);
 
         -- Obtener el ID de la factura insertada
         DECLARE @NuevoIdFactura INT = SCOPE_IDENTITY();
@@ -1196,6 +1315,7 @@ BEGIN
     END CATCH
 END;
 GO
+
 
 -- Procedimiento para eliminar un detalle de venta
 CREATE OR ALTER PROCEDURE esquema_operaciones.eliminarDetalleDeVenta
@@ -1230,7 +1350,7 @@ BEGIN
     END CATCH
 END
 GO
--- Procedimiento para eliminar una venta con su factura
+-- Procedimiento para eliminar una venta con su factura y su detalle de venta
 CREATE OR ALTER PROCEDURE esquema_Ventas.eliminarVenta
     @VentaID INT  -- ID de la venta que se desea eliminar
 AS
@@ -1242,17 +1362,25 @@ BEGIN
     
         -- 1. Eliminar la factura asociada a la venta, si existe
         DECLARE @FacturaID INT;
-        SELECT @FacturaID = idFactura FROM esquema_Ventas.ventasRegistradas WHERE id = @VentaID;
+        SELECT @FacturaID = idDeFactura FROM esquema_Ventas.ventasRegistradas WHERE id = @VentaID;
         
         IF @FacturaID IS NOT NULL
         BEGIN
             DELETE FROM esquema_operaciones.Factura 
             WHERE id = @FacturaID;
         END
-
-        -- 2. Eliminar la venta
+		-- 2. Eliminar el detalle de venta asociada a la venta, si existe
+		IF @VentaID IS NOT NULL
+        BEGIN
+		DELETE FROM esquema_operaciones.DetalleDeVenta
+        WHERE idVenta = @VentaID;
+		END
+        -- 3. Eliminar la venta
+		IF @VentaID IS NOT NULL
+        BEGIN
         DELETE FROM esquema_Ventas.ventasRegistradas
         WHERE id = @VentaID;
+		END
 
         COMMIT TRANSACTION;
 

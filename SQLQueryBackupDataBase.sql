@@ -1,3 +1,5 @@
+USE SUPERMERCADO_Grupo7
+GO
 
 USE [master]  
 GO  
@@ -123,5 +125,5 @@ GO
 
 ----primero elimino la base de datos, luego ejecuto el SP
 ----exec se lleva la ubicacion del .bak y el nombre de la base de datos
-exec [esquema_Respaldo].[sp_RestoreDatabases]  N'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Backup\Backup.bakALMACEN_Grupo7_FULL_Dia5.bak','ALMACEN_Grupo7'
+exec [esquema_Respaldo].[sp_RestoreDatabases]  N'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Backup\Backup.bakSUPERMERCADO_Grupo7_FULL_Dia5.bak','SUPERMERCADO_Grupo7'
 go

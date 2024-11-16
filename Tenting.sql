@@ -1,30 +1,32 @@
 use master
 go
 
-use ALMACEN_Grupo7
+use SUPERMERCADO_Grupo7
 go
 
 -----------------TESTING ENTREGA N°3
 ------------SUCURSALES
-
+---FUNCIONA
 exec esquema_Sucursal.insertarSucursal 'AMBA','fam','Zapata 5664','La Matanza 1757','Buenos Aires','9 a 12','23434341'
 go
 select* from esquema_Sucursal.sucursales
 go
-exec esquema_Sucursal.modificarSucursal 1,'AMBA','fam','Zapata 5664','La Matanza 1757','Buenos Aires','12 a 16','23434341'
+exec esquema_Sucursal.modificarSucursal 6,'AMBA','fam','Zapata 5664','La Matanza 1757','Buenos Aires','12 a 16','23434341'
 go
 select* from esquema_Sucursal.sucursales
 go
-exec esquema_Sucursal.eliminarSucursal 1
+exec esquema_Sucursal.eliminarSucursal 6
 go
 select* from esquema_Sucursal.sucursales
 go
 ------------EMPLEADOS
-exec esquema_Persona.insertarEmpleado 2142,'Martin','Diaz',4542,'Zapata 5664', 'La Matanza','Buenos Aires',24215,'Cajero','fem','tarde','martin@gmail.com','trabajo@gmail.com',3
+---FALLA PORQUE LA SUCURSAL CON ID 4 NO EXISTE
+exec esquema_Persona.insertarEmpleado 2142,'Martin','Diaz',4542,'Zapata 5664', 'La Matanza','Buenos Aires',24215,'Cajero','fem','tarde','martin@gmail.com','trabajo@gmail.com',4
 go
 select* from esquema_Persona.empleado
 GO
-exec esquema_Persona.modificarEmpleado 1,2142,'Martin','Diaz',4542,'Zapata 5664', 'La Matanza','Buenos Aires',24215,'Repositor','fem','mañana','martin@gmail.com','trabajo@gmail.com',3
+---FALLA PORQUE El empleado con el ID y legajo especificados no existe.
+exec esquema_Persona.modificarEmpleado 1,2142,'Martin','Diaz',4542,'Zapata 5664', 'La Matanza','Buenos Aires',24215,'Repositor','fem','mañana','martin@gmail.com','trabajo@gmail.com',2
 go
 select* from esquema_Persona.empleado
 GO
@@ -35,22 +37,24 @@ go
 
 
 ------------TIPO DE CLIENTE
+---FUNCIONA
 exec esquema_Persona.insertarTipoDeCliente 'miembro','0000000.'
 go
 select* from esquema_Persona.cliente
 go
 
-exec esquema_Persona.modificarTipoDeCliente 1,'miembro','1111111.'
+exec esquema_Persona.modificarTipoDeCliente 2,'miembro','1111111.'
 go
 select* from esquema_Persona.cliente
 go
-
-exec esquema_Persona.eliminarTipoDeCliente 2
+---FALLA POR QUE EL ID DE TIPO DE CLIENTE NO EXISTE
+exec esquema_Persona.eliminarTipoDeCliente 1
 go
 select* from esquema_Persona.cliente
 go
 
 -------------MEDIOS DE PAGO
+---FUNCIONA
 exec esquema_operaciones.insertarMedioDePago 'cash','Efectivo'
 go
 select* from esquema_operaciones.MediosDePago
@@ -61,24 +65,24 @@ go
 select* from esquema_operaciones.MediosDePago
 go
 
-exec esquema_operaciones.eliminarMedioDePago 3
+exec esquema_operaciones.eliminarMedioDePago 8
 go
 select* from esquema_operaciones.MediosDePago
 go
 
 ----------------LINEA DE PRODUCTO
-
+--NO FUNCIONA PORQUE El ID de linea producto proporcionado existe en la tabla
 exec esquema_Producto.insertarLineaDeProducto  1, 'perfumria','jabon'
 go
 select* from esquema_Producto.LineaDeProducto
 go
-
-exec esquema_Producto.modificarLineaDeProducto 1, 'almacen','jabon'
+----FUNCIONA
+exec esquema_Producto.modificarLineaDeProducto 2, 'almacen','jabon'
 go
 select* from esquema_Producto.LineaDeProducto
 go
 
-exec esquema_Producto.eliminarLineaDeProducto 1
+exec esquema_Producto.eliminarLineaDeProducto 2
 go
 select* from esquema_Producto.LineaDeProducto
 go
@@ -86,6 +90,7 @@ go
 ----------------PRODUCTO
 
 --PRUEBA TABLA PRODUCTOS
+--NO FUNCIONA PORQUE Ya existe un producto con el idCatalogo 1. El id debe ser único.
 EXEC esquema_Producto.insertarProducto 1, 'Electrónica', 'Smartphone XYZ', 699.99, 750.00, 'Unidad', '2024-11-13 10:30:00', 101, 'Smartphone XYZ Modelo 2024', 'ProveedorTech', 'Móviles', '1 unidad', 699.99, 'Smartphone XYZ', 699.99;
 GO
 
@@ -98,15 +103,18 @@ GO
 select * from [esquema_Producto].[Producto]
 GO
 
--- MODIFICAR PRODUCTO EXISTENTE  
-EXEC esquema_Producto.modificarProducto    3, 'Electrónica',  'Laptop XYZ 2024 - Actualizada', 899.99, 999.99,  'Unidad', '2024-11-14 09:00:00',   0, 'Laptop XYZ 2024 - Actualizada', 'Proveedor ABC', 'Computadoras', '1', 899.99, 'Laptop XYZ 2024 - Actualizada',  899.99;
+-- MODIFICAR PRODUCTO EXISTENTE 
+--NO FUNCIANA Ya existe un producto con el idImportado 2000. El id debe ser único.
+EXEC esquema_Producto.modificarProducto    3, 'Electrónica',  'Laptop XYZ 2024 - Actualizada', 899.99, 999.99,  'Unidad', '2024-11-14 09:00:00',   2000, 'Laptop XYZ 2024 - Actualizada', 'Proveedor ABC', 'Computadoras', '1', 899.99, 'Laptop XYZ 2024 - Actualizada',  899.99;
 GO
 
 SELECT * from [esquema_Producto].[Producto]
 GO
 ----ELIMINAR PRODUCTOS
-
+----FUNCIONA
 EXEC esquema_Producto.eliminarProducto 9  
+GO
+SELECT * from [esquema_Producto].[Producto]
 GO
 ----------------VENTA
 
@@ -143,13 +151,6 @@ GO
 
 SELECT * FROM [esquema_operaciones].[Factura]
 GO
----ELIMINAR DETALLE VENTA
-
-exec esquema_operaciones.eliminarDetalleDeVenta 1001
-GO
-
-SELECT * from [esquema_operaciones].[DetalleDeVenta]
-GO
 
 ---ELIMINAR VENTA
 
@@ -162,68 +163,88 @@ GO
 ---TESTING DE ENTREGA NRO 4
 
 --IMPORTAR MEDIOS DE PAGO
-EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'medios de pago$'
 go
 
 --IMPORTAR EMPLEADOS
-EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'Empleados$'
 go
 
 --IMPORTAR IMPORTADOS
-EXEC esquema_Producto.importarImportados @RutaArchivo ='C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Productos\Productos_importados.xlsx',
+EXEC esquema_Producto.importarImportados @RutaArchivo ='C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Productos_importados.xlsx',
 @nombreHoja = 'Listado de Productos$'
 go
 
 --IMPORTAR ELECTRICO
-EXEC esquema_Producto.importarElectronico   @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Productos\Electronic accessories.xlsx', 
+EXEC esquema_Producto.importarElectronico   @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Electronic accessories.xlsx', 
 @nombreHoja ='Sheet1$' 
 go
 
 --IMPORTAR LINEA PRODUCTO
-EXEC esquema_Producto.importarLineDeProducto @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx', 
+EXEC esquema_Producto.importarLineDeProducto @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx', 
 @nombreHoja = 'Clasificacion productos'
 go
 
 --IMPORTAR CATALOGO
-EXEC esquema_Producto.importarCatalogo 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Productos\catalogo.csv'
+EXEC esquema_Producto.importarCatalogo 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\catalogo.csv'
 go
 
 --IMPORTAR SUCURSAL
-EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'sucursal$'
 GO
 
 --IMPORTAR VENTAS REGISTRADAS
-EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\Archivos\Ventas_registradas.csv'
+EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Ventas_registradas.csv'
 go
 
 ---TESTING ENTREGA NRO 5
+
+--Seguridad
+execute as user = 'ThomasPerez'---ejecuto el usuario cajero
+go
+
+execute as user = 'MartinaGarcia'--ejecuto el usuario supervisor
+go
+
+
+select USER_NAME();--Verifico el usuario
+
+EXEC esquema_operaciones.insertarNotaDeCredito--pruebo si el rol puede ejecutar el SP de nota de credito
+    @nroFactura = 12345,
+    @tipoDeFactura = 'Factura A',
+    @TipoDeCliente = 'Minorista',
+    @Fecha = '2024-11-15',  -- Valor especificado para la fecha
+    @Valor = 1000.50,
+    @Motivo = 'Devolución de productos',
+    @idFactura = 5678,
+    @idCliente = 91011;
+go
+
+
+revert--Vuelo al rol de dbo
+go
+
 
 --OBTENER EMPLEADO
 exec esquema_Persona.ObtenerEmpleadoDesencriptado 1
 GO
 
 --INSERTAR NOTA DE CREDITO
-exec esquema_operaciones.insertarNotaDeCredito 2001, 'A', 'miembro', '2024-11-14', 125.00, 'Consecuencia', 1, 1 
+exec esquema_operaciones.insertarNotaDeCredito 2001, 'A', 'miembro', '2024-11-14', 125.00, 'Consecuencia', 1, 1 --No se ejecutara porque necesita permisos de supervisor
 GO
 
------------------------PRUEBA DE EJECUCION REPORTES
+---PRUEBA DE EJECUCION REPORTES
 --Llamada reporte mensual
 EXEC esquema_Ventas.GenerarReporteMensualXML @Mes = 3, @Año = 2019;
-GO
-SELECT * FROM esquema_RespaldoXML.RespaldoMensualXML
 GO
 --Llamada reporte trimestral
 EXEC esquema_Ventas.GenerarReporteTrimestralXML @Trimestre = 1, @Año = 2019;
 GO
-SELECT * FROM esquema_RespaldoXML.RespaldoTrimestralXML
-GO
 --Llamada reporte por rango fecha
 EXEC esquema_Ventas.GenerarReportePorRangoFechasXML '2019-01-01', '2019-03-20';
-GO
-SELECT * FROM esquema_RespaldoXML.RespaldoPorRangoFechasXML 
 GO
 
 --Llamada al procedimiento almacenado pasando los valores directamente
@@ -234,9 +255,5 @@ EXEC esquema_Ventas.GenerarReporteVentasExtendidoXML
     '2019-02-01',         -- FechaEspecifica
     'Yangon';             -- SucursalCiudad
 GO
-SELECT * FROM esquema_RespaldoXML.RespaldoVentasExtendidoXML
-GO
-
-
 
 

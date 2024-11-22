@@ -10,65 +10,8 @@ go
 
 
 
------------------------Logins
----------login del supervisor
+----------------------------Insertar notas de credito
 
-CREATE LOGIN LogMartina WITH PASSWORD = '123456789';
-go
-----------login de cajero
-
-CREATE LOGIN LogThomas WITH PASSWORD = '111';
-go
-
-
-----------------------Users:
-
----------User del supervisor
-IF EXISTS (SELECT 1 FROM sys.database_principals WHERE name = 'MartinaGarcia')
-BEGIN
-    PRINT 'El Usuario MartinaGarcia ya existe.';
-END
-ELSE
-BEGIN
-    CREATE USER MartinaGarcia FOR LOGIN LogMartina;
-    PRINT 'El Usuario MartinaGarcia ha sido creado';
-END
-go
----------User del Cajero
-IF EXISTS (SELECT 1FROM sys.database_principals WHERE name = 'ThomasPerez')
-BEGIN
-    PRINT 'El Usuario ThomasPerez ya existe.';
-END
-ELSE
-BEGIN
-    CREATE USER ThomasPerez FOR LOGIN LogThomas;
-    PRINT 'El Usuario ThomasPerez ha sido creado';
-END
-go
-
-
-
-------------------------------Creacion del rol Supervisor
-
-IF EXISTS (SELECT 1 FROM sys.database_principals WHERE name = 'Supervisor' AND type = 'R')
-BEGIN
-    PRINT 'El rol Supervisor ya existe.';
-END
-ELSE
-BEGIN
-	-- Revocar permisos de INSERT para todos los usuarios en la tabla NotasDeCredito
-	REVOKE INSERT ON esquema_operaciones.NotaDeCredito FROM PUBLIC;
-	CREATE ROLE Supervisor;
-	-- Otorgar permisos de INSERT solo al rol Supervisor
-	GRANT INSERT ON esquema_operaciones.NotaDeCredito TO Supervisor;
-    PRINT 'El rol Supervisor ha sido creado.';
-END
-go
--- Asigna el rol Supervisor a los usuarios autorizados
-ALTER ROLE Supervisor ADD MEMBER MartinaGarcia;
---Asignar permiso para ejecutar la el SP
-GRANT EXECUTE ON esquema_operaciones.insertarNotaDeCredito TO MartinaGarcia;
-go
 CREATE OR ALTER PROCEDURE esquema_operaciones.insertarNotaDeCredito(
     @nroFactura INT,
     @tipoDeFactura VARCHAR(20),
@@ -133,6 +76,63 @@ BEGIN
 END;
 GO
 
+-----------------------Logins
+---------login del supervisor
+
+CREATE LOGIN LogMartina WITH PASSWORD = '123456789';
+go
+----------login de cajero
+
+CREATE LOGIN LogThomas WITH PASSWORD = '111';
+go
+
+
+----------------------Users:
+
+---------User del supervisor
+IF EXISTS (SELECT 1 FROM sys.database_principals WHERE name = 'MartinaGarcia')
+BEGIN
+    PRINT 'El Usuario MartinaGarcia ya existe.';
+END
+ELSE
+BEGIN
+    CREATE USER MartinaGarcia FOR LOGIN LogMartina;
+    PRINT 'El Usuario MartinaGarcia ha sido creado';
+END
+go
+---------User del Cajero
+IF EXISTS (SELECT 1FROM sys.database_principals WHERE name = 'ThomasPerez')
+BEGIN
+    PRINT 'El Usuario ThomasPerez ya existe.';
+END
+ELSE
+BEGIN
+    CREATE USER ThomasPerez FOR LOGIN LogThomas;
+    PRINT 'El Usuario ThomasPerez ha sido creado';
+END
+go
+
+------------------------------Creacion del rol Supervisor
+
+IF EXISTS (SELECT 1 FROM sys.database_principals WHERE name = 'Supervisor' AND type = 'R')
+BEGIN
+    PRINT 'El rol Supervisor ya existe.';
+END
+ELSE
+BEGIN
+	-- Revocar permisos de INSERT para todos los usuarios en la tabla NotasDeCredito
+	REVOKE INSERT ON esquema_operaciones.NotaDeCredito FROM PUBLIC;
+	CREATE ROLE Supervisor;
+	-- Otorgar permisos de INSERT solo al rol Supervisor
+	GRANT INSERT ON esquema_operaciones.NotaDeCredito TO Supervisor;
+    PRINT 'El rol Supervisor ha sido creado.';
+END
+go
+-- Asigna el rol Supervisor a los usuarios autorizados
+ALTER ROLE Supervisor ADD MEMBER MartinaGarcia;
+--Asignar permiso para ejecutar la el SP
+GRANT EXECUTE ON esquema_operaciones.insertarNotaDeCredito TO MartinaGarcia;
+go
 
 
 --------------------------------creacion del rol Cajero

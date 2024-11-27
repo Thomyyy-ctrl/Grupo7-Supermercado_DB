@@ -125,6 +125,9 @@ BEGIN
 
 	CREATE ROLE Supervisor;
 
+	--El supervisor tendría acceso a la mayoría de los procedimientos almacenados, especialmente aquellos que permiten consultar,
+	--insertar, actualizar y eliminar datos administrativos importantes.
+
 	-- Otorgar permisos al rol Supervisor
 	--Gestión de ventas:
 	GRANT INSERT ON esquema_operaciones.NotaDeCredito TO Supervisor;
@@ -177,6 +180,7 @@ BEGIN
     PRINT 'El rol Supervisor ha sido creado.';
 END
 go
+
 -- Asigna el rol Supervisor a los usuarios autorizados
 ALTER ROLE Supervisor ADD MEMBER MartinaGarcia;
 --Asignar permiso para ejecutar la el SP
@@ -193,8 +197,13 @@ END
 ELSE
 BEGIN
 	CREATE ROLE Cajero;
+
+	--El rol de cajero generalmente tendría acceso limitado a las operaciones que son directamente relevantes para su trabajo,
+	--como registrar ventas, procesar pagos y generar comprobantes. Por lo tanto, el acceso debería restringirse a procedimientos 
+	--específicos relacionados con esas tareas.
 	-- Otorgar permisos al rol Supervisor
 	--Gestión de ventas:
+
 
 	--Gestión de detalles de venta, medios de pago y factura:
 	GRANT EXECUTE ON esquema_Ventas.insertarVentas TO Cajero;
@@ -206,7 +215,7 @@ BEGIN
 	GRANT EXECUTE ON esquema_operaciones.insertarNotaDeCredito TO Cajero;
 
 	---Denegar permisos al rol:
-
+	----Gestión administrativa y eliminacion de datos:
 	DENY EXECUTE ON esquema_Sucursal.insertarSucursal TO Cajero;
 	DENY EXECUTE ON esquema_Sucursal.modificarSucursal TO Cajero;
 	DENY EXECUTE ON esquema_Sucursal.eliminarSucursal TO Cajero;

@@ -122,9 +122,58 @@ ELSE
 BEGIN
 	-- Revocar permisos de INSERT para todos los usuarios en la tabla NotasDeCredito
 	REVOKE INSERT ON esquema_operaciones.NotaDeCredito FROM PUBLIC;
+
 	CREATE ROLE Supervisor;
-	-- Otorgar permisos de INSERT solo al rol Supervisor
+
+	-- Otorgar permisos al rol Supervisor
+	--Gestión de ventas:
 	GRANT INSERT ON esquema_operaciones.NotaDeCredito TO Supervisor;
+	GRANT EXECUTE ON esquema_Ventas.insertarVentas TO Supervisor;
+	GRANT EXECUTE ON esquema_Ventas.importarVentasRegistradas TO Supervisor;
+	GRANT EXECUTE ON esquema_Ventas.eliminarVenta TO Supervisor;
+	
+	--Gestión de detalles de venta:
+	GRANT EXECUTE ON esquema_operaciones.insertarDetalleDeVenta TO Supervisor;
+	GRANT EXECUTE ON esquema_operaciones.registrarDetalleDeVenta TO Supervisor;
+	GRANT EXECUTE ON esquema_operaciones.eliminarDetalleDeVenta TO Supervisor;
+	
+	-- Gestión de medios de pago:
+	GRANT EXECUTE ON esquema_operaciones.insertarMedioDePago TO Supervisor;
+	GRANT EXECUTE ON esquema_operaciones.modificarMedioDePago TO Supervisor;
+	GRANT EXECUTE ON esquema_operaciones.eliminarMedioDePago TO Supervisor;
+
+	--Gestión de empleados y tipos de clientes:
+	GRANT EXECUTE ON esquema_Persona.insertarEmpleado TO Supervisor;
+	GRANT EXECUTE ON esquema_Persona.modificarEmpleado TO Supervisor;
+	GRANT EXECUTE ON esquema_Persona.eliminarEmpleado TO Supervisor;
+	GRANT EXECUTE ON esquema_Persona.ObtenerEmpleadoDesencriptado TO Supervisor;
+	GRANT EXECUTE ON esquema_Persona.insertarTipoDeCliente TO Supervisor;
+	GRANT EXECUTE ON esquema_Persona.modificarTipoDeCliente TO Supervisor;
+	GRANT EXECUTE ON esquema_Persona.eliminarTipoDeCliente TO Supervisor;
+
+	--Gestión de productos:
+	GRANT EXECUTE ON esquema_Producto.insertarProducto TO Supervisor;
+	GRANT EXECUTE ON esquema_Producto.modificarProducto TO Supervisor;
+	GRANT EXECUTE ON esquema_Producto.eliminarProducto TO Supervisor;
+	GRANT EXECUTE ON esquema_Producto.importarCatalogo TO Supervisor;
+	GRANT EXECUTE ON esquema_Producto.importarLineDeProducto TO Supervisor;
+	GRANT EXECUTE ON esquema_Producto.importarElectronico TO Supervisor;
+	GRANT EXECUTE ON esquema_Producto.importarImportados TO Supervisor;
+
+	--Gestión de sucursales:
+	GRANT EXECUTE ON esquema_Sucursal.insertarSucursal TO Supervisor;
+	GRANT EXECUTE ON esquema_Sucursal.modificarSucursal TO Supervisor;
+	GRANT EXECUTE ON esquema_Sucursal.eliminarSucursal TO Supervisor;
+
+	--Facturación y comprobantes:
+	GRANT EXECUTE ON esquema_operaciones.insertarFactura TO Supervisor;
+	GRANT EXECUTE ON esquema_operaciones.insertarNotaDeCredito TO Supervisor;
+
+	--Reportes de ventas
+	GRANT EXECUTE ON esquema_Ventas.GenerarReporteMensualXML TO Supervisor;
+	GRANT EXECUTE ON esquema_Ventas.GenerarReportePorRangoFechasXML TO Supervisor;
+	GRANT EXECUTE ON esquema_Ventas.GenerarReporteTrimestralXML TO Supervisor;
+	GRANT EXECUTE ON esquema_Ventas.GenerarReporteVentasExtendidoXML TO Supervisor;
     PRINT 'El rol Supervisor ha sido creado.';
 END
 go
@@ -144,6 +193,39 @@ END
 ELSE
 BEGIN
 	CREATE ROLE Cajero;
+	-- Otorgar permisos al rol Supervisor
+	--Gestión de ventas:
+
+	--Gestión de detalles de venta, medios de pago y factura:
+	GRANT EXECUTE ON esquema_Ventas.insertarVentas TO Cajero;
+	GRANT EXECUTE ON esquema_Ventas.importarVentasRegistradas TO Cajero;
+	GRANT EXECUTE ON esquema_operaciones.insertarDetalleDeVenta TO Cajero;
+	GRANT EXECUTE ON esquema_operaciones.registrarDetalleDeVenta TO Cajero;
+	GRANT EXECUTE ON esquema_operaciones.insertarMedioDePago TO Cajero;
+	GRANT EXECUTE ON esquema_operaciones.insertarFactura TO Cajero;
+	GRANT EXECUTE ON esquema_operaciones.insertarNotaDeCredito TO Cajero;
+
+	---Denegar permisos al rol:
+
+	DENY EXECUTE ON esquema_Sucursal.insertarSucursal TO Cajero;
+	DENY EXECUTE ON esquema_Sucursal.modificarSucursal TO Cajero;
+	DENY EXECUTE ON esquema_Sucursal.eliminarSucursal TO Cajero;
+	DENY EXECUTE ON esquema_Persona.insertarEmpleado TO Cajero;
+	DENY EXECUTE ON esquema_Persona.eliminarEmpleado TO Cajero;
+	DENY EXECUTE ON esquema_Persona.modificarEmpleado TO Cajero;
+	DENY EXECUTE ON esquema_Producto.insertarProducto TO Cajero;
+	DENY EXECUTE ON esquema_Producto.eliminarProducto TO Cajero;
+	DENY EXECUTE ON esquema_Producto.modificarProducto TO Cajero;
+	DENY EXECUTE ON esquema_Producto.importarCatalogo TO Cajero;
+	DENY EXECUTE ON esquema_Persona.modificarTipoDeCliente TO Cajero;
+	DENY EXECUTE ON esquema_operaciones.eliminarDetalleDeVenta TO Cajero;
+	DENY EXECUTE ON esquema_operaciones.eliminarMedioDePago TO Cajero;
+	DENY EXECUTE ON esquema_operaciones.importarMediosDePago TO Cajero;
+	DENY EXECUTE ON esquema_Producto.importarElectronico TO Cajero;
+	DENY EXECUTE ON esquema_Producto.importarImportados TO Cajero;
+	DENY EXECUTE ON esquema_Producto.importarLineDeProducto TO Cajero;
+	DENY EXECUTE ON esquema_Producto.importarCatalogo TO Cajero;
+	
     PRINT 'El rol Cajero ha sido creado.';
 END
 go

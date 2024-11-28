@@ -160,12 +160,21 @@ GO
 SELECT * from [esquema_Ventas].[ventasRegistradas]
 GO
 
----TESTING DE ENTREGA NRO 4
+
+
+
+
+--------------------------------------------------------------------------TESTING DE ENTREGA NRO 4
 
 --IMPORTAR MEDIOS DE PAGO
 EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'medios de pago$'
 go
+
+--IMPORTAR SUCURSAL
+EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
+@nombreHoja = 'sucursal$'
+GO
 
 --IMPORTAR EMPLEADOS
 EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
@@ -191,16 +200,27 @@ go
 EXEC esquema_Producto.importarCatalogo 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Productos\catalogo.csv'
 go
 
---IMPORTAR SUCURSAL
-EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
-@nombreHoja = 'sucursal$'
-GO
-
 --IMPORTAR VENTAS REGISTRADAS
 EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Ventas_registradas.csv'
 go
 
---MOSTRAR LAS TABLAS :
+
+--REGISTRAR LAS FACTURAS
+EXEC esquema_operaciones.registrarFacturasNuevas
+go
+
+--REGISTRAR DETALLES DE VENTAS
+EXEC esquema_operaciones.registrarDetalleDeVenta 
+go
+
+-------------------------------------------------------------------------
+
+
+
+
+
+
+----------------------------------------------------MOSTRAR LAS TABLAS :
 
 select * from esquema_Persona.empleado
 go
@@ -221,8 +241,22 @@ select * from esquema_Ventas.ventasRegistradas
 go
 
 
+select * from esquema_operaciones.DetalleDeVenta
+go
 
----TESTING ENTREGA NRO 5
+select * from esquema_operaciones.Factura
+go
+
+
+--------------------------------------------------------------------------
+
+
+
+
+
+
+
+----------------------------------------------------------------------------TESTING ENTREGA NRO 5
 
 --Seguridad
 
@@ -284,6 +318,11 @@ go
 exec esquema_Persona.ObtenerEmpleadoDesencriptado 1
 GO
 
+exec esquema_Persona.desencriptarTablaEmpleado---Mostrar la tabla desencriptada
+go
+
+
+
 --INSERTAR NOTA DE CREDITO
 exec esquema_operaciones.insertarNotaDeCredito 2001, 'A', 'miembro', '2024-11-14', 125.00, 'Consecuencia', 1, 1 --No se ejecutara porque necesita permisos de supervisor
 GO
@@ -307,5 +346,6 @@ EXEC esquema_Ventas.GenerarReporteVentasExtendidoXML
     '2019-02-01',         -- FechaEspecifica
     'Yangon';             -- SucursalCiudad
 GO
+
 
 

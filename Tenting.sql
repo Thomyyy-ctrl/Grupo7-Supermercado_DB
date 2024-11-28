@@ -163,52 +163,104 @@ GO
 ---TESTING DE ENTREGA NRO 4
 
 --IMPORTAR MEDIOS DE PAGO
-EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_operaciones.importarMediosDePago @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'medios de pago$'
 go
 
 --IMPORTAR EMPLEADOS
-EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_Persona.importarEmpleado @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'Empleados$'
 go
 
 --IMPORTAR IMPORTADOS
-EXEC esquema_Producto.importarImportados @RutaArchivo ='C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Productos_importados.xlsx',
+EXEC esquema_Producto.importarImportados @RutaArchivo ='C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Productos_importados.xlsx',
 @nombreHoja = 'Listado de Productos$'
 go
 
 --IMPORTAR ELECTRICO
-EXEC esquema_Producto.importarElectronico   @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Electronic accessories.xlsx', 
+EXEC esquema_Producto.importarElectronico   @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Productos\Electronic accessories.xlsx', 
 @nombreHoja ='Sheet1$' 
 go
 
 --IMPORTAR LINEA PRODUCTO
-EXEC esquema_Producto.importarLineDeProducto @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx', 
+EXEC esquema_Producto.importarLineDeProducto @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx', 
 @nombreHoja = 'Clasificacion productos'
 go
 
 --IMPORTAR CATALOGO
-EXEC esquema_Producto.importarCatalogo 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Productos\catalogo.csv'
+EXEC esquema_Producto.importarCatalogo 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Productos\catalogo.csv'
 go
 
 --IMPORTAR SUCURSAL
-EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
+EXEC esquema_Sucursal.importarSucursal @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Informacion_complementaria.xlsx',
 @nombreHoja = 'sucursal$'
 GO
 
 --IMPORTAR VENTAS REGISTRADAS
-EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\User\Desktop\Martina\Supermercado sql\TP_integrador_Archivos\TP_integrador_Archivos\Ventas_registradas.csv'
+EXEC esquema_Ventas.importarVentasRegistradas @RutaArchivo = 'C:\Users\PC\Desktop\Grupo7-Supermercado_DB\TP_integrador_Archivos\TP_integrador_Archivos\Ventas_registradas.csv'
 go
+
+--MOSTRAR LAS TABLAS :
+
+select * from esquema_Persona.empleado
+go
+
+select * from esquema_Producto.LineaDeProducto
+go
+
+select * from esquema_Producto.Producto
+go
+
+select * from esquema_Sucursal.sucursales
+go
+
+select * from esquema_operaciones.MediosDePago
+go
+
+select * from esquema_Ventas.ventasRegistradas
+go
+
+
 
 ---TESTING ENTREGA NRO 5
 
 --Seguridad
-execute as user = 'ThomasPerez'---ejecuto el usuario cajero
+
+---ejecuto el usuario cajero
+execute as user = 'ThomasPerez'
 go
 
-execute as user = 'MartinaGarcia'--ejecuto el usuario supervisor
+-------Verifico que permisos tiene el rol de cajero
+SELECT 
+    dp.name AS Rol,
+    dp.type_desc AS Tipo,
+    p.state_desc AS EstadoPermiso,
+    p.permission_name AS Permiso,
+    o.name AS Objeto,
+    o.type_desc AS TipoObjeto
+FROM sys.database_permissions p
+JOIN sys.database_principals dp ON p.grantee_principal_id = dp.principal_id
+LEFT JOIN sys.objects o ON p.major_id = o.object_id
+WHERE dp.name = 'Cajero';
 go
 
+--ejecuto el usuario supervisor
+execute as user = 'MartinaGarcia'
+go
+
+-------Verifico que permisos tiene el rol de cajero
+SELECT 
+    dp.name AS Rol,
+    dp.type_desc AS Tipo,
+    p.state_desc AS EstadoPermiso,
+    p.permission_name AS Permiso,
+    o.name AS Objeto,
+    o.type_desc AS TipoObjeto
+FROM sys.database_permissions p
+JOIN sys.database_principals dp ON p.grantee_principal_id = dp.principal_id
+LEFT JOIN sys.objects o ON p.major_id = o.object_id
+WHERE dp.name = 'Supervisor';
+go
 
 select USER_NAME();--Verifico el usuario
 

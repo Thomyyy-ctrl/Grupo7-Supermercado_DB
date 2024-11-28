@@ -14,7 +14,7 @@ go
 
 
 
----------------------MEDIOS DE PAGO-------------------
+------------------------------------MEDIOS DE PAGO--------------
 ----------FUNCIONA-------TABLAS TEMPORALES CON VARCHAR
 CREATE OR ALTER PROCEDURE esquema_operaciones.importarMediosDePago(@RutaArchivo NVARCHAR(MAX), @nombreHoja NVARCHAR(50))
 AS 
@@ -217,7 +217,7 @@ BEGIN
                     provincia
                 )
                 SELECT 
-                    ENCRYPTBYPASSPHRASE('FraseSegura', TRY_CAST(Legajo AS VARCHAR(50))),
+                    ENCRYPTBYPASSPHRASE('FraseSegura',Legajo),
                     ENCRYPTBYPASSPHRASE('FraseSegura', Nombre),
                     ENCRYPTBYPASSPHRASE('FraseSegura', Apellido),
                     ENCRYPTBYPASSPHRASE('FraseSegura', DNI),
@@ -232,8 +232,16 @@ BEGIN
                     ENCRYPTBYPASSPHRASE('FraseSegura', provincia)
                 FROM #EmpleadoCompleto
                 WHERE Legajo IS NOT NULL;
+								-----------------------------------------------actualizar tabla empleado
+				UPDATE esquema_Persona.empleado
+				SET idSucursal = tr.id
+				FROM esquema_Persona.empleado ta
+				JOIN esquema_Sucursal.sucursales tr 
+				ON CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', ta.sucursal )) = tr.reemplazadaX
+				WHERE ta.idSucursal IS NULL;
+			
 
-                PRINT 'Los datos se insertaron exitosamente' 
+                PRINT 'Los datos se insertaron exitosamente'; 
                 
                 -- Limpiar tablas temporales
                 DROP TABLE #EmpleadoTemporal1;
@@ -522,6 +530,13 @@ BEGIN
                 INSERT INTO esquema_Producto.LineaDeProducto(lineaProducto, productoDescrip)
                 SELECT Lineadeproducto,REPLACE(Producto, '_', ' ') AS Producto
                 FROM #ClasificacionTemporal1
+
+				--inserto idProducto
+				UPDATE esquema_Producto.LineaDeProducto
+				SET idProducto = t2.id
+				FROM esquema_Producto.LineaDeProducto t1
+				JOIN esquema_Producto.Producto t2 ON  t2.category = t1.productoDescrip
+				WHERE t1.idProducto IS NULL;
                 
                 PRINT 'Los datos se insertaron exitosamente'; 
                 
@@ -868,6 +883,24 @@ BEGIN
                 WHERE producto LIKE '%Ã¡%' OR producto LIKE '%Ã©%' OR producto LIKE '%Ã­%' 
                 OR producto LIKE '%Ã³%' OR producto LIKE '%Ãº%' OR producto LIKE '%Ã‘%' OR producto LIKE '%Ã±%';
 
+
+
+				-------inserto idSucursales
+				UPDATE esquema_Ventas.ventasRegistradas
+				SET idSucursales = t2.idSucursal
+				FROM esquema_Ventas.ventasRegistradas t1
+				JOIN esquema_Persona.empleado t2 ON CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', t2.legajo )) = t1.empleado
+				WHERE t1.idSucursales IS NULL;
+
+				-------inserto idEmpleado
+				UPDATE esquema_Ventas.ventasRegistradas
+				SET idEmpleado = t2.id
+				FROM esquema_Ventas.ventasRegistradas t1
+				JOIN esquema_Persona.empleado t2 ON CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', t2.legajo )) = t1.empleado
+				WHERE t1.idEmpleado IS NULL;
+
+				select * from esquema_Ventas.ventasRegistradas 
+
                 PRINT 'Los datos se insertaron y los caracteres especiales fueron reemplazados exitosamente' 
                 
                 -- Limpiar tabla temporal
@@ -893,3 +926,156 @@ BEGIN
 END
 GO
 
+
+
+-----------------REGISTRAR DETALLES DE VENTAS:
+CREATE OR ALTER PROCEDURE esquema_operaciones.registrarDetalleDeVenta 
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Validar que la tabla de ventas no este vacia.
+				IF EXISTS (SELECT 1 FROM esquema_Ventas.ventasRegistradas)
+		BEGIN
+			PRINT 'La tabla tiene registros.'
+		END
+		ELSE
+		BEGIN
+			PRINT 'La tabla VentasRegistradas está vacía.'
+			RETURN;
+		END;
+
+		----Inserto en la tabla detalleDeVentas los elementos evitando duplicados
+
+		WITH auxiliarCTE1(Codigo,Descripción, PrecioUnitario, Cantidad,Subtotal,idVenta,idProducto) AS
+		(
+			SELECT 
+			ROW_NUMBER() OVER (ORDER BY T1.id) AS Codigo,
+			T1.producto, 
+			T1.precioUnitario, 
+			T1.cantidad,
+			T1.precioUnitario * T1.cantidad as Subtotal,
+			T1.id,
+			T2.id
+			FROM esquema_Ventas.ventasRegistradas T1
+			INNER JOIN esquema_Producto.Producto T2 ON T1.producto = T2.nombre
+		)
+		INSERT INTO esquema_operaciones.DetalleDeVenta(Código,Descripción, PrecioUnitario, Cantidad,Subtotal,idVenta,idProducto)
+		SELECT Codigo, Descripción, PrecioUnitario, Cantidad, Subtotal, idVenta, idProducto
+		FROM auxiliarCTE1
+		WHERE NOT EXISTS (
+			SELECT 1 
+			FROM esquema_operaciones.DetalleDeVenta
+			WHERE esquema_operaciones.DetalleDeVenta.idVenta = auxiliarCTE1.idVenta
+		);
+
+		---Mostrar tabla:
+		select * from esquema_operaciones.DetalleDeVenta
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        -- En caso de error, revertir la transacción
+        ROLLBACK TRANSACTION;
+
+        DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
+
+        -- Captura del mensaje de error
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        -- Lanza el error con RAISERROR
+        RAISERROR ('No se pudo registrar los detalles de ventas', 
+                    @ErrorSeverity, @ErrorMessage);
+    END CATCH
+END;
+GO
+
+
+-----------------REGISTRAR FACTURAS:
+
+CREATE OR ALTER PROCEDURE esquema_operaciones.registrarFacturasNuevas
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Validar que la tabla de ventas no este vacia.
+				IF EXISTS (SELECT 1 FROM esquema_Ventas.ventasRegistradas)
+		BEGIN
+			PRINT 'La tabla tiene registros.'
+		END
+		ELSE
+		BEGIN
+			PRINT 'La tabla VentasRegistradas está vacía.'
+			RETURN;
+		END;
+
+		----Inserto en la tabla facturas los elementos evitando duplicados
+		
+		WITH auxiliarCTE(NroFactura,FechaEmision,HoraEmision,IdEmpleado,Total,TipoDeFactura,CiudadDeSucursal,MedioDePago,Estado,idMedioDePago) AS
+		(
+			SELECT 
+			T1.idFactura, 
+			T1.fecha, 
+			T1.hora,
+			T2.id,
+			T1.precioUnitario*T1.cantidad as Total,
+			T1.tipoDeFactura,
+			T1.ciudad,
+			T1.medioDePago,
+			 CASE 
+            WHEN ABS(CHECKSUM(NEWID())) % 2 = 0 THEN 'PAGADA'
+            ELSE 'CANCELADA'
+			END AS Estado,
+			T3.id
+			FROM esquema_Ventas.ventasRegistradas T1
+			INNER JOIN esquema_Persona.empleado T2 ON T1.empleado = CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', t2.legajo))
+			INNER JOIN esquema_operaciones.MediosDePago T3 ON T1.medioDePago = T3.MedioDePago
+		)
+		--select * from auxiliarCTE
+		----inserto los valores
+		INSERT INTO esquema_operaciones.Factura(NroFactura,FechaEmision,HoraEmision,IdEmpleado,Total,TipoDeFactura,CiudadDeSucursal,MedioDePago,Estado,idMedioDePago)
+		SELECT NroFactura,FechaEmision,HoraEmision,IdEmpleado,Total,TipoDeFactura,CiudadDeSucursal,MedioDePago,Estado,idMedioDePago
+		FROM auxiliarCTE
+		WHERE NOT EXISTS (
+			SELECT 1 
+			FROM esquema_operaciones.Factura
+			WHERE esquema_operaciones.Factura.NroFactura = auxiliarCTE.NroFactura
+		);
+
+		-------inserto idFacturas en VentasRegistradas si se insertaron previamente en la tabla facturas
+		UPDATE esquema_Ventas.ventasRegistradas
+		SET idDeFactura = t1.id
+		FROM esquema_Ventas.ventasRegistradas t2
+		JOIN esquema_operaciones.Factura t1 ON  t1.NroFactura= t2.idFactura
+		WHERE t2.idDeFactura IS NULL AND EXISTS (
+			SELECT 1
+			FROM esquema_operaciones.Factura f
+			WHERE f.NroFactura = t2.idFactura
+		);
+
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        -- En caso de error, revertir la transacción
+        ROLLBACK TRANSACTION;
+
+        DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
+
+        -- Captura del mensaje de error
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        -- Lanza el error con RAISERROR
+        RAISERROR ('No se pudo registrar los detalles de ventas', 
+                    @ErrorSeverity, @ErrorMessage);
+    END CATCH
+END;
+GO

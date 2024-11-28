@@ -294,7 +294,7 @@ BEGIN
         -- Selección de los datos con desencriptación
         SELECT
             id,
-            CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', CONVERT(VARCHAR(50), legajo))) AS legajo,
+            CAST(CAST(DecryptByPassPhrase('FraseSegura',legajo) as varchar(500)) as int) as legajo,
             CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', nombre)) AS nombre,
             CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', apellido)) AS apellido,
             CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', nroDoc)) AS nroDoc,
@@ -333,6 +333,66 @@ BEGIN
     END CATCH
 END;
 GO
+
+
+CREATE OR ALTER PROCEDURE esquema_Persona.desencriptarTablaEmpleado
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Validar que la tabla de ventas no este vacia.
+				IF EXISTS (SELECT 1 FROM esquema_Persona.empleado)
+		BEGIN
+			PRINT 'La tabla tiene registros.'
+		END
+		ELSE
+		BEGIN
+			PRINT 'La tabla Empleado está vacía.'
+			RETURN;
+		END;
+
+				SELECT------cambiar varbinary legajo
+				id,
+				CAST(CAST(DECRYPTBYPASSPHRASE('FraseSegura',legajo) as varchar(500)) as int) as legajo,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', nombre)) AS nombre,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', apellido)) AS apellido,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', nroDoc)) AS nroDoc,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', calleYNum)) AS calleYNum,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', localidad)) AS localidad,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', provincia)) AS provincia,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', cuil)) AS cuil,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', cargo)) AS cargo,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', sucursal)) AS sucursal,
+				CONVERT(VARCHAR(50), DECRYPTBYPASSPHRASE('FraseSegura', turno)) AS turno,
+				CONVERT(VARCHAR(100), DECRYPTBYPASSPHRASE('FraseSegura', emailPersonal)) AS emailPersonal,
+				CONVERT(VARCHAR(100), DECRYPTBYPASSPHRASE('FraseSegura', emailEmpresa)) AS emailEmpresa,
+				idSucursal
+				FROM esquema_Persona.empleado
+
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        -- En caso de error, revertir la transacción
+        ROLLBACK TRANSACTION;
+
+        DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
+
+        -- Captura del mensaje de error
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        -- Lanza el error con RAISERROR
+        RAISERROR ('No se pudo mostrar la tabla de empleados', 
+                    @ErrorSeverity, @ErrorMessage);
+    END CATCH
+END;
+GO
+
+
 
 
 

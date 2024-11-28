@@ -92,6 +92,30 @@ go
 
 -------------TABLAS PRODUCTOS(CATALOGO, IMPORTADOS Y ELECTRONICOS) Y LINEA DE PRODUCTO (CLASIFICACION DE PRODUCTO)
 
+
+drop table esquema_operaciones.detalledeventa
+go
+drop table esquema_operaciones.notadecredito
+go
+drop table esquema_producto.lineadeproducto
+go
+drop table esquema_producto.producto
+go
+drop table esquema_ventas.ventasregistradas
+go
+drop table esquema_operaciones.factura
+go
+drop table esquema_operaciones.mediosdepago
+go
+drop table esquema_persona.cliente
+go
+drop table esquema_persona.empleado
+go
+drop table esquema_sucursal.sucursales
+go
+
+
+
 IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema_Producto' AND TABLE_NAME = 'Producto')
 	BEGIN
        PRINT 'La tabla producto ya existe.'
@@ -205,25 +229,25 @@ IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema
     BEGIN
         -- Crea la tabla si no existe
 		-- Esta tabla esta encriptada
-CREATE TABLE esquema_Persona.empleado(
-id INT IDENTITY(1,1),
-legajo INT NOT NULL, 
-nombre VARBINARY(256),         -- campo encriptado
-apellido VARBINARY(256),       -- campo encriptado
-nroDoc VARBINARY(256),         -- campo encriptado
-calleYNum VARBINARY(256),      -- campo encriptado
-localidad VARBINARY(256),      -- campo encriptado
-provincia VARBINARY(256),      -- campo encriptado
-cuil VARBINARY(256),           -- campo encriptado
-cargo VARBINARY(256),          -- campo encriptado
-sucursal VARBINARY(256),       -- campo encriptado
-turno VARBINARY(256),          -- campo encriptado
-emailPersonal VARBINARY(256),  -- campo encriptado
-emailEmpresa VARBINARY(256),   -- campo encriptado
-idSucursal int,
-constraint pkId primary key(id),
-constraint fkSucursal foreign key (idSucursal) references esquema_Sucursal.sucursales (id)
-)
+		CREATE TABLE esquema_Persona.empleado(
+		id INT IDENTITY(1,1),
+		legajo VARBINARY(8000) NULL, 
+		nombre VARBINARY(256),         -- campo encriptado
+		apellido VARBINARY(256),       -- campo encriptado
+		nroDoc VARBINARY(256),         -- campo encriptado
+		calleYNum VARBINARY(256),      -- campo encriptado
+		localidad VARBINARY(256),      -- campo encriptado
+		provincia VARBINARY(256),      -- campo encriptado
+		cuil VARBINARY(256),           -- campo encriptado
+		cargo VARBINARY(256),          -- campo encriptado
+		sucursal VARBINARY(256),       -- campo encriptado
+		turno VARBINARY(256),          -- campo encriptado
+		emailPersonal VARBINARY(256),  -- campo encriptado
+		emailEmpresa VARBINARY(256),   -- campo encriptado
+		idSucursal int,
+		constraint pkId primary key(id),
+		constraint fkSucursal foreign key (idSucursal) references esquema_Sucursal.sucursales (id)
+		)
 PRINT 'Tabla empleado creada.'
 	END
 go
@@ -237,12 +261,12 @@ IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema
     ELSE
     BEGIN
 	 -- Crea la tabla si no existe
-CREATE TABLE esquema_operaciones.MediosDePago(
-id int identity (1,1),
-MedioDePago varchar (50),
-NombreEs varchar (50),
-constraint pkMediosDePago primary key (id)
-)
+		CREATE TABLE esquema_operaciones.MediosDePago(
+		id int identity (1,1),
+		MedioDePago varchar (50),
+		NombreEs varchar (50),
+		constraint pkMediosDePago primary key (id)
+		)
 PRINT 'Tabla medios de pago creada.'
 	END
 go
@@ -254,25 +278,25 @@ IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema
     ELSE
     BEGIN
 	 -- Crea la tabla si no existe
-CREATE TABLE esquema_operaciones.Factura(
-id int identity(1,1),
-NroFactura int,
-FechaEmision date,
-HoraEmision time,
-IdEmpleado int,
-Total decimal(38,2),
-TipoDeFactura varchar(1),
-CiudadDeSucursal varchar(20),
-MedioDePago varchar(30),
-Estado varchar(30) check (Estado like 'PAGADA' or Estado like 'CANCELADA'),
-----Foreign key
-idMedioDePago int, 
+	CREATE TABLE esquema_operaciones.Factura(
+	id int identity(1,1),
+	NroFactura int,
+	FechaEmision date,
+	HoraEmision time,
+	IdEmpleado int,
+	Total decimal(38,2),
+	TipoDeFactura varchar(1),
+	CiudadDeSucursal varchar(20),
+	MedioDePago varchar(30),
+	Estado varchar(30) check (Estado like 'PAGADA' or Estado like 'CANCELADA'),
+	----Foreign key
+	idMedioDePago int, 
 
 
-constraint pkId primary key (id),
-constraint fkMedioDePago foreign key (idMedioDePago) 
-references esquema_operaciones.MediosDePago(id)
-)
+	constraint pkId primary key (id),
+	constraint fkMedioDePago foreign key (idMedioDePago) 
+	references esquema_operaciones.MediosDePago(id)
+	)
 PRINT 'Tabla factura creada.'
 	END
 go
@@ -285,23 +309,23 @@ IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema
     ELSE
     BEGIN
 	 -- Crea la tabla si no existe
-CREATE TABLE esquema_operaciones.NotaDeCredito(
-id int identity (1,1),
-nroFactura int,
-tipoDeFactura varchar (20) CHECK (tipoDeFactura LIKE 'A' OR tipoDeFactura LIKE 'B' OR tipoDeFactura LIKE 'C'),
-TipoDeCliente varchar(30),
-Fecha datetime default getdate(),
-Valor decimal(38,2),
-Motivo varchar(150),
+	CREATE TABLE esquema_operaciones.NotaDeCredito(
+	id int identity (1,1),
+	nroFactura int,
+	tipoDeFactura varchar (20) CHECK (tipoDeFactura LIKE 'A' OR tipoDeFactura LIKE 'B' OR tipoDeFactura LIKE 'C'),
+	TipoDeCliente varchar(30),
+	Fecha datetime default getdate(),
+	Valor decimal(38,2),
+	Motivo varchar(150),
 
------Foreign key
-idFactura int,
-idCliente int,
+	-----Foreign key
+	idFactura int,
+	idCliente int,
 
-constraint pkNotaDeCredito primary key (id),
-constraint fkDeFacturas foreign key (idFactura) references esquema_operaciones.Factura (id),
-constraint fkTipoDeCliente foreign key (idCliente) references esquema_Persona.cliente (id)
-)
+	constraint pkNotaDeCredito primary key (id),
+	constraint fkDeFacturas foreign key (idFactura) references esquema_operaciones.Factura (id),
+	constraint fkTipoDeCliente foreign key (idCliente) references esquema_Persona.cliente (id)
+	)
 PRINT 'Tabla notas de credito creada.'
 	END
 go
@@ -315,45 +339,45 @@ IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema
     ELSE
     BEGIN
 	 -- Crea la tabla si no existe
-CREATE TABLE esquema_Ventas.ventasRegistradas(
-id int identity(1,1), ----ID de la Venta
-idFactura bigint, 
-tipoDeFactura varchar (20) CHECK (tipoDeFactura LIKE 'A' OR tipoDeFactura LIKE 'B' OR tipoDeFactura LIKE 'C'),
-ciudad varchar(15),
-tipoDeCliente varchar(30),
-genero varchar (20),
-producto varchar(150),
-precioUnitario decimal(10,2), ---CAMBIAR A DECIMAL
-cantidad int,
-fecha date,
-hora time,
-medioDePago varchar(20),
-empleado int,
-idIdentificador varchar(80),
+		CREATE TABLE esquema_Ventas.ventasRegistradas(
+		id int identity(1,1), ----ID de la Venta
+		idFactura bigint, 
+		tipoDeFactura varchar (20) CHECK (tipoDeFactura LIKE 'A' OR tipoDeFactura LIKE 'B' OR tipoDeFactura LIKE 'C'),
+		ciudad varchar(15),
+		tipoDeCliente varchar(30),
+		genero varchar (20),
+		producto varchar(150),
+		precioUnitario decimal(10,2), ---CAMBIAR A DECIMAL
+		cantidad int,
+		fecha date,
+		hora time,
+		medioDePago varchar(20),
+		empleado int,
+		idIdentificador varchar(80),
 
 
---Foreign key de las tablas
+		--Foreign key de las tablas
 
-idSucursales int,
-idCliente int,
-idEmpleado int,
-idDeFactura int, 
+		idSucursales int,
+		idCliente int,
+		idEmpleado int,
+		idDeFactura int, 
 
-constraint pkId primary key (id), 
+		constraint pkId primary key (id), 
 
 
 
-constraint fkSucursales_Ventas foreign key (idSucursales)
-references esquema_Sucursal.sucursales (id),
+		constraint fkSucursales_Ventas foreign key (idSucursales)
+		references esquema_Sucursal.sucursales (id),
 
-constraint fkCliente_Ventas foreign key (idCliente)
-references esquema_Persona.cliente (id),
+		constraint fkCliente_Ventas foreign key (idCliente)
+		references esquema_Persona.cliente (id),
 
-constraint fkEmpleado_Ventas foreign key (idEmpleado)
-references esquema_Persona.empleado (id),
+		constraint fkEmpleado_Ventas foreign key (idEmpleado)
+		references esquema_Persona.empleado (id),
 
-constraint fkFactura foreign key (idDeFactura)
-references esquema_operaciones.Factura (id)
+		constraint fkFactura foreign key (idDeFactura)
+		references esquema_operaciones.Factura (id)
 )
 PRINT 'Tabla ventas registradas creada.'
 	END
@@ -366,21 +390,21 @@ IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'esquema
     ELSE
     BEGIN
 	 -- Crea la tabla si no existe
-CREATE TABLE esquema_operaciones.DetalleDeVenta(
-id int identity(1,1),
-Código int not null,
-Descripción varchar(30),
-PrecioUnitario decimal(4,2),
-Cantidad int,
-Subtotal decimal(5,2),
+		CREATE TABLE esquema_operaciones.DetalleDeVenta(
+		id int identity(1,1),
+		Código int not null,
+		Descripción varchar(100),
+		PrecioUnitario float,
+		Cantidad int,
+		Subtotal decimal(10,2),
 
-----Foreign key
+		----Foreign key
 
-idVenta int,
-idProducto int,
-constraint pkidDetalle primary key (id),
-constraint fkProducto foreign key (idProducto) references esquema_Producto.Producto (id),
-constraint fkVenta foreign key (idVenta) references esquema_Ventas.ventasRegistradas
+		idVenta int,
+		idProducto int,
+		constraint pkidDetalle primary key (id),
+		constraint fkProducto foreign key (idProducto) references esquema_Producto.Producto (id),
+		constraint fkVenta foreign key (idVenta) references esquema_Ventas.ventasRegistradas
 )
 PRINT 'Tabla detalle de venta creada.'
 	END
